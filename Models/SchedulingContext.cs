@@ -81,6 +81,19 @@ public partial class SchedulingContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
+        modelBuilder.Entity<Schedule>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Allocation).WithMany(p => p.Schedules)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Schedules_Allocations");
+
+            entity.HasOne(d => d.TimeSlot).WithMany(p => p.Schedules)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Schedules_TimeSlots");
+        });
+
         modelBuilder.Entity<Section>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_rooms");
@@ -90,11 +103,13 @@ public partial class SchedulingContext : DbContext
 
         modelBuilder.Entity<TimeSlot>(entity =>
         {
-            entity.HasOne(d => d.Category).WithMany()
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Category).WithMany(p => p.TimeSlots)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TimeSlots_Categories");
 
-            entity.HasOne(d => d.DaysOfWeek).WithMany()
+            entity.HasOne(d => d.DaysOfWeek).WithMany(p => p.TimeSlots)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TimeSlots_DaysOfWeek");
         });

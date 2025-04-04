@@ -25,6 +25,9 @@ public partial class Allocation
     [InverseProperty("Allocations")]
     public virtual Instructor Instructor { get; set; } = null!;
 
+    [InverseProperty("Allocation")]
+    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+
     [ForeignKey("SectionId")]
     [InverseProperty("Allocations")]
     public virtual Section Section { get; set; } = null!;

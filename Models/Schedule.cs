@@ -6,12 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Scheduling.Models;
 
-[Keyless]
 public partial class Schedule
 {
+    [Key]
     public int Id { get; set; }
 
     public int AllocationId { get; set; }
 
     public int TimeSlotId { get; set; }
+
+    [ForeignKey("AllocationId")]
+    [InverseProperty("Schedules")]
+    public virtual Allocation Allocation { get; set; } = null!;
+
+    [ForeignKey("TimeSlotId")]
+    [InverseProperty("Schedules")]
+    public virtual TimeSlot TimeSlot { get; set; } = null!;
 }

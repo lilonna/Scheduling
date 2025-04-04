@@ -14,4 +14,7 @@ public partial class DaysOfWeek
 
     [StringLength(50)]
     public string Name { get; set; } = null!;
+
+    [InverseProperty("DaysOfWeek")]
+    public virtual ICollection<TimeSlot> TimeSlots { get; set; } = new List<TimeSlot>();
 }

@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Scheduling.Models;
 
-[Keyless]
 public partial class TimeSlot
 {
+    [Key]
     public int Id { get; set; }
 
     [StringLength(50)]
@@ -25,8 +25,13 @@ public partial class TimeSlot
     public int CategoryId { get; set; }
 
     [ForeignKey("CategoryId")]
+    [InverseProperty("TimeSlots")]
     public virtual Category Category { get; set; } = null!;
 
     [ForeignKey("DaysOfWeekId")]
+    [InverseProperty("TimeSlots")]
     public virtual DaysOfWeek DaysOfWeek { get; set; } = null!;
+
+    [InverseProperty("TimeSlot")]
+    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
 }

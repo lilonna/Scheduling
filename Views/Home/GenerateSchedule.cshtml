@@ -1,0 +1,40 @@
+﻿@model List<Scheduling.Models.Schedule>
+
+@{
+    ViewData["Title"] = "Generated Schedule";
+}
+
+<h2 class="text-center mt-4">Generated Schedule</h2>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered mt-3">
+        <thead class="thead-dark">
+            <tr>
+                <th>Course Name</th>
+                <th>Instructor</th>
+                <th>Section</th>
+                <th>Day</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var schedule in Model)
+            {
+                <tr>
+                    <td>@schedule.Allocation.Course.Name</td>
+                    <td>@schedule.Allocation.Instructor.FullName</td>
+                    <td>@schedule.Allocation.Section.Name</td>
+                    <td>@schedule.TimeSlot.DaysOfWeek</td>
+                    <td>@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning text-center mt-4">
+        <strong>No schedule generated yet.</strong>
+    </div>
+}
