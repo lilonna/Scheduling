@@ -38,3 +38,8 @@ else
         <strong>No schedule generated yet.</strong>
     </div>
 }
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+

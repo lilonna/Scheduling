@@ -21,116 +21,108 @@ namespace Scheduling.Controllers
         {
             try
             {
-                // Step 1: Sort Instructors
                 var sortedInstructors = _context.Instructors.OrderBy(i => i.FullName).ToList();
+                //if (sortedInstructors.Count == 0)
+                //{
+                //    ViewBag.ErrorMessage = "No instructors found in the system.";
+                //    return View("GenerateSchedule");
+                //}
 
-                // Step 2: Assign Instructors to Courses
-                foreach (var course in _context.Courses.ToList())
+                var courses = _context.Courses.ToList();
+                foreach (var course in courses)
                 {
                     var availableInstructor = sortedInstructors.FirstOrDefault(i =>
                         i.Allocations.Sum(a => a.Course.CreditHour) + course.CreditHour <= MAX_CREDIT_HOURS_PER_DAY);
 
-                    if (availableInstructor != null)
+                    if (availableInstructor == null)
                     {
-                        var allocation = new Allocation
-                        {
-                            CourseId = course.Id,
-                            InstructorId = availableInstructor.Id
-                        };
-                        _context.Allocations.Add(allocation);
+                        ViewBag.ErrorMessage = $"No available instructor for course: {course.Name}";
+                        return View("GenerateSchedule");
                     }
-                    else
+
+                    _context.ChangeTracker.Clear(); // Ensure no conflicts
+                    var allocation = new Allocation
                     {
-                        Console.WriteLine($"No available instructor for course: {course.Name}");
-                    }
+                        CourseId = course.Id,
+                        InstructorId = availableInstructor.Id
+                    };
+
+                    _context.Allocations.Add(allocation);
                 }
                 _context.SaveChanges();
 
-                // Step 3: Assign Sections to Courses
-                foreach (var section in _context.Sections.ToList())
+                var sections = _context.Sections.ToList();
+                if (sections.Count == 0)
                 {
-                    foreach (var allocation in _context.Allocations.Where(a => a.SectionId == null).ToList())
+                    ViewBag.ErrorMessage = "No sections found in the system.";
+                    return View("GenerateSchedule");
+                }
+
+                foreach (var section in sections)
+                {
+                    var allocations = _context.Allocations.Where(a => a.SectionId == null).ToList();
+
+                    foreach (var allocation in allocations)
                     {
-                        if (section.Allocations.Sum(a => a.Course.CreditHour) + allocation.Course.CreditHour <= MAX_LEARNING_HOURS_PER_DAY)
+                        if (section.Allocations.Sum(a => a.Course.CreditHour) + allocation.Course.CreditHour > MAX_LEARNING_HOURS_PER_DAY)
                         {
-                            allocation.SectionId = section.Id;
+                            ViewBag.ErrorMessage = $"Section {section.Name} cannot take course {allocation.Course.Name} due to time limits.";
+                            return View("GenerateSchedule");
                         }
-                        else
+
+                        var trackedAllocation = _context.Allocations.Find(allocation.Id);
+                        if (trackedAllocation != null)
                         {
-                            Console.WriteLine($"Section {section.Name} cannot take course {allocation.Course.Name} due to time limits.");
-                        }
-                    }
-                }
-                _context.SaveChanges();
-
-                // Step 4: Assign Courses to Time Slots
-                foreach (var allocation in _context.Allocations.ToList())
-                {
-                    var availableTimeslot = _context.TimeSlots.FirstOrDefault(t =>
-                        !_context.Schedules.Any(s => s.TimeSlotId == t.Id && s.AllocationId == allocation.Id));
-
-                    if (availableTimeslot != null)
-                    {
-                        var schedule = new Schedule
-                        {
-                            AllocationId = allocation.Id,
-                            TimeSlotId = availableTimeslot.Id
-                        };
-                        _context.Schedules.Add(schedule);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"No available timeslot for course {allocation.Course.Name}");
-                    }
-                }
-                _context.SaveChanges();
-
-                // Step 5: Optimize Instructor Schedules
-                foreach (var instructor in sortedInstructors)
-                {
-                    var instructorSchedule = _context.Schedules
-                        .Where(s => s.Allocation.InstructorId == instructor.Id)
-                        .GroupBy(s => s.TimeSlot.DaysOfWeekId)
-                        .ToList();
-
-                    var daysWithOneClass = instructorSchedule.Where(g => g.Count() == 1).ToList();
-
-                    foreach (var day in daysWithOneClass)
-                    {
-                        var targetDay = instructorSchedule.FirstOrDefault(g => g.Count() > 1);
-                        if (targetDay != null)
-                        {
-                            var classToMove = day.First();
-                            classToMove.TimeSlotId = targetDay.First().TimeSlotId;
+                            trackedAllocation.SectionId = section.Id;
+                            _context.Entry(trackedAllocation).State = EntityState.Modified;
                         }
                     }
                 }
                 _context.SaveChanges();
 
-                // Step 6: Validate Schedule (Conflict Detection)
+                var allocationsList = _context.Allocations.ToList();
+                foreach (var allocation in allocationsList)
+                {
+                    var availableTimeslot = _context.TimeSlots
+                        .FirstOrDefault(t => !_context.Schedules.Any(s => s.TimeSlotId == t.Id && s.AllocationId == allocation.Id));
+
+                    if (availableTimeslot == null)
+                    {
+                        ViewBag.ErrorMessage = $"No available timeslot for course {allocation.Course.Name}";
+                        return View("GenerateSchedule");
+                    }
+
+                    _context.ChangeTracker.Clear(); // Prevent duplicate tracking
+                    var schedule = new Schedule
+                    {
+                        AllocationId = allocation.Id,
+                        TimeSlotId = availableTimeslot.Id
+                    };
+
+                    _context.Schedules.Add(schedule);
+                }
+                _context.SaveChanges();
+
                 foreach (var instructor in sortedInstructors)
                 {
                     var schedule = _context.Schedules.Where(s => s.Allocation.InstructorId == instructor.Id).ToList();
-                    var hasConflict = schedule.GroupBy(s => s.TimeSlotId).Any(g => g.Count() > 1);
-
-                    if (hasConflict)
+                    if (schedule.GroupBy(s => s.TimeSlotId).Any(g => g.Count() > 1))
                     {
-                        Console.WriteLine($"Conflict detected for instructor {instructor.FullName}");
+                        ViewBag.ErrorMessage = $"Conflict detected for instructor {instructor.FullName}";
+                        return View("GenerateSchedule");
                     }
                 }
 
-                foreach (var section in _context.Sections.ToList())
+                foreach (var section in sections)
                 {
                     var schedule = _context.Schedules.Where(s => s.Allocation.SectionId == section.Id).ToList();
-                    var hasConflict = schedule.GroupBy(s => s.TimeSlotId).Any(g => g.Count() > 1);
-
-                    if (hasConflict)
+                    if (schedule.GroupBy(s => s.TimeSlotId).Any(g => g.Count() > 1))
                     {
-                        Console.WriteLine($"Conflict detected for section {section.Name}");
+                        ViewBag.ErrorMessage = $"Conflict detected for section {section.Name}";
+                        return View("GenerateSchedule");
                     }
                 }
 
-                // Step 7: Generate Final Schedule and Return as View
                 var finalSchedule = _context.Schedules
                     .Include(s => s.Allocation.Course)
                     .Include(s => s.Allocation.Instructor)
@@ -142,11 +134,20 @@ namespace Scheduling.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error generating schedule: {ex.Message}");
-                // Optionally, log the error or return a friendly message
-                return View("GenerateSchedule", new List<Schedule>());
+                ViewBag.ErrorMessage = $"Error generating schedule: {ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    ViewBag.ErrorMessage += $" Inner Exception: {ex.InnerException.Message}";
+                }
+                return View("GenerateSchedule");
             }
         }
+
+
+
+
+
+
 
         public IActionResult Index()
         {
