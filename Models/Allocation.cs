@@ -28,7 +28,4 @@ public partial class Allocation
     [ForeignKey("SectionId")]
     [InverseProperty("Allocations")]
     public virtual Section Section { get; set; } = null!;
-
-    [InverseProperty("Allocation")]
-    public virtual ICollection<TimeSlot> TimeSlots { get; set; } = new List<TimeSlot>();
 }

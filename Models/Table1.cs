@@ -6,12 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Scheduling.Models;
 
-[Table("DaysOfWeek")]
-public partial class DaysOfWeek
+[Keyless]
+[Table("Table_1")]
+public partial class Table1
 {
-    [Key]
     public int Id { get; set; }
-
-    [StringLength(50)]
-    public string Name { get; set; } = null!;
 }

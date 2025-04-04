@@ -29,6 +29,8 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Section> Sections { get; set; }
 
+    public virtual DbSet<Table1> Table1s { get; set; }
+
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -88,15 +90,11 @@ public partial class SchedulingContext : DbContext
 
         modelBuilder.Entity<TimeSlot>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_UseFor");
-
-            entity.Property(e => e.Id).ValueGeneratedNever();
-
-            entity.HasOne(d => d.Allocation).WithMany(p => p.TimeSlots)
+            entity.HasOne(d => d.Category).WithMany()
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_TimeSlots_AllocationId");
+                .HasConstraintName("FK_TimeSlots_Categories");
 
-            entity.HasOne(d => d.DayaOfWeek).WithMany(p => p.TimeSlots)
+            entity.HasOne(d => d.DaysOfWeek).WithMany()
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TimeSlots_DaysOfWeek");
         });
