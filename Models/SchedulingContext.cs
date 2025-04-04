@@ -25,6 +25,8 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Instructor> Instructors { get; set; }
 
+    public virtual DbSet<Schedule> Schedules { get; set; }
+
     public virtual DbSet<Section> Sections { get; set; }
 
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
