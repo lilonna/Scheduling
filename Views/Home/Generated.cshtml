@@ -1,7 +1,7 @@
 ﻿@model List<Scheduling.Models.Schedule>
 
 @{
-    ViewData["Title"] = "Generated Schedule";
+    ViewData["Title"] = "Generated";
 }
 
 <h2 class="text-center mt-4">Generated Schedule</h2>
@@ -25,7 +25,7 @@
                     <td>@schedule.Allocation.Course.Name</td>
                     <td>@schedule.Allocation.Instructor.FullName</td>
                     <td>@schedule.Allocation.Section.Name</td>
-                    <td>@schedule.TimeSlot.DaysOfWeek</td>
+                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
                     <td>@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
                 </tr>
             }
@@ -41,5 +41,29 @@ else
 @if (ViewBag.ErrorMessage != null)
 {
     <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success">
+        <strong>Success:</strong> @ViewBag.SuccessMessage
+    </div>
+}
+@if (ViewBag.TrackerLog != null)
+{
+    <pre style="color:darkgreen; background-color:#f6f6f6; padding:10px;">
+        @ViewBag.TrackerLog
+        </pre>
+}
+@if (ViewBag.DuplicateLogs != null && ((List<string>)ViewBag.DuplicateLogs).Any())
+{
+    <div class="alert alert-warning">
+        <h5>Duplicates detected:</h5>
+        <ul>
+            @foreach (var log in (List<string>)ViewBag.DuplicateLogs)
+            {
+                <li>@log</li>
+            }
+        </ul>
+    </div>
 }
 

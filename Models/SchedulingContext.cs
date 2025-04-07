@@ -83,15 +83,15 @@ public partial class SchedulingContext : DbContext
 
         modelBuilder.Entity<Schedule>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.HasKey(e => e.Id).HasName("PK__Schedule__3214EC07E140CA54");
 
             entity.HasOne(d => d.Allocation).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Schedules_Allocations");
+                .HasConstraintName("FK__Schedule__Alloca__2CF2ADDF");
 
             entity.HasOne(d => d.TimeSlot).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Schedules_TimeSlots");
+                .HasConstraintName("FK__Schedule__TimeSl__2DE6D218");
         });
 
         modelBuilder.Entity<Section>(entity =>
