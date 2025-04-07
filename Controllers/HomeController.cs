@@ -87,7 +87,7 @@ namespace Scheduling.Controllers
                 .Include(a => a.Instructor)
                 .Include(a => a.Section)
                 .AsNoTracking()
-                .OrderBy(a => a.Instructor.FullName)
+                .OrderBy(a => a.Instructor.FullName).ThenBy(a => a.Course.Name)
                 .ToListAsync();
         }
 
