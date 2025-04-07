@@ -18,133 +18,31 @@ namespace Scheduling.Controllers
             _context = context;
         }
 
+
+
         public async Task<IActionResult> Generate()
         {
             try
             {
-                var allocations = await _context.Allocations
-                    .Include(a => a.Course)
-                    .Include(a => a.Instructor)
-                    .Include(a => a.Section)
-                    .AsNoTracking()
-                     .OrderBy(a => a.Instructor.FullName)
-                    .ToListAsync();
-
-                var timeSlots = await _context.TimeSlots
-                    .Include(ts => ts.DaysOfWeek)
-                    .AsNoTracking()
-                    .ToListAsync();
-
-                var orderedSlots = timeSlots
-                    .OrderBy(ts => ts.DaysOfWeek.Id)
-                    .ThenBy(ts => ts.From)
-                    .ToList();
+                var allocations = await GetAllocationsAsync();
+                var orderedSlots = await GetOrderedTimeSlotsAsync();
 
                 var newSchedules = new List<Schedule>();
-
-                var instructorSlotMap = new Dictionary<(int instructorId, int timeSlotId), bool>();
-                var sectionSlotMap = new Dictionary<(int sectionId, int timeSlotId), bool>();
+                var instructorSlotMap = new Dictionary<(int, int), bool>();
+                var sectionSlotMap = new Dictionary<(int, int), bool>();
                 var instructorHoursMap = new Dictionary<int, int>();
-                var sectionDayHoursMap = new Dictionary<(int sectionId, string day), int>();
+                var sectionDayHoursMap = new Dictionary<(int, string), int>();
                 var sectionScheduledDays = new Dictionary<int, HashSet<string>>();
-                var instructorDaySlots = new Dictionary<(int instructorId, string day), List<TimeSlot>>();
+                var instructorDaySlots = new Dictionary<(int, string), List<TimeSlot>>();
 
                 foreach (var allocation in allocations)
                 {
-                    var instructorId = allocation.InstructorId;
-                    var sectionId = allocation.SectionId;
-                    var creditHour = allocation.Course.CreditHour;
-
-                    if (!sectionScheduledDays.ContainsKey(sectionId))
-                        sectionScheduledDays[sectionId] = new HashSet<string>();
-
-                    bool assigned = false;
-
-                    var rotatedSlots = orderedSlots
-                        .Skip(sectionId % 5)
-                        .Concat(orderedSlots.Take(sectionId % 5))
-                        .ToList();
-
-                    var prioritizedSlots = rotatedSlots
-                        .OrderByDescending(ts =>
-                        {
-                            var day = ts.DaysOfWeek.Name;
-                            var score = 0;
-
-                            if (!sectionScheduledDays[sectionId].Contains(day)) score += 2;
-
-                            var existingSlots = instructorDaySlots.TryGetValue((instructorId, day), out var list) ? list : new List<TimeSlot>();
-                            if (!existingSlots.Any()) score += 2; // no class that day
-                            else
-                            {
-                           
-                                var slotIndices = existingSlots.Select(es => orderedSlots.FindIndex(s => s.Id == es.Id)).ToList();
-                                var currentSlotIndex = orderedSlots.FindIndex(s => s.Id == ts.Id);
-
-                                // Hard penalty if squeezed between two other sessions
-                                if (slotIndices.Contains(currentSlotIndex - 1) && slotIndices.Contains(currentSlotIndex + 1))
-                                    return -1000; // skip this slot completely
-
-                                // Strong reward if this is nicely spaced
-                                if (!slotIndices.Contains(currentSlotIndex - 1) && !slotIndices.Contains(currentSlotIndex + 1))
-                                    score += 3; // large reward
-
-                                // Light penalty if it's back-to-back with existing slot
-                                if (slotIndices.Contains(currentSlotIndex - 1) || slotIndices.Contains(currentSlotIndex + 1))
-                                    score -= 1;
-
-                                // Boost based on course weight
-                                score *= allocation.Course.CreditHour;
-
-                            }
-
-                            return score;
-                        })
-                        .ToList();
-
-                    foreach (var ts in prioritizedSlots)
-                    {
-                        var timeSlotId = ts.Id;
-                        var day = ts.DaysOfWeek.Name;
-
-                        var instructorBusy = instructorSlotMap.ContainsKey((instructorId, timeSlotId));
-                        var sectionBusy = sectionSlotMap.ContainsKey((sectionId, timeSlotId));
-
-                        var currentInstructorHours = instructorHoursMap.TryGetValue(instructorId, out var iHrs) ? iHrs : 0;
-                        var currentSectionDayHours = sectionDayHoursMap.TryGetValue((sectionId, day), out var sHrs) ? sHrs : 0;
-
-                        var exceedsTeachingLimit = currentInstructorHours + creditHour > MaxTeachingLoad;
-                        var exceedsLearningLimit = currentSectionDayHours + creditHour > MaxLearningHoursPerDay;
-
-                        var sectionHas5Days = sectionScheduledDays[sectionId].Count >= 5;
-                        var isNewDayForSection = !sectionScheduledDays[sectionId].Contains(day);
-
-                        if (!instructorBusy && !sectionBusy && !exceedsTeachingLimit && !exceedsLearningLimit)
-                        {
-                            if (sectionHas5Days && isNewDayForSection)
-                                continue;
-
-                            newSchedules.Add(new Schedule
-                            {
-                                AllocationId = allocation.Id,
-                                TimeSlotId = timeSlotId
-                            });
-
-                            instructorSlotMap[(instructorId, timeSlotId)] = true;
-                            sectionSlotMap[(sectionId, timeSlotId)] = true;
-
-                            instructorHoursMap[instructorId] = currentInstructorHours + creditHour;
-                            sectionDayHoursMap[(sectionId, day)] = currentSectionDayHours + creditHour;
-                            sectionScheduledDays[sectionId].Add(day);
-
-                            if (!instructorDaySlots.ContainsKey((instructorId, day)))
-                                instructorDaySlots[(instructorId, day)] = new List<TimeSlot>();
-                            instructorDaySlots[(instructorId, day)].Add(ts);
-
-                            assigned = true;
-                            break;
-                        }
-                    }
+                    var assigned = TryAssignSchedule(
+                        allocation, orderedSlots, newSchedules,
+                        instructorSlotMap, sectionSlotMap,
+                        instructorHoursMap, sectionDayHoursMap,
+                        sectionScheduledDays, instructorDaySlots
+                    );
 
                     if (!assigned)
                     {
@@ -153,32 +51,13 @@ namespace Scheduling.Controllers
                     }
                 }
 
-                var conflictFound = newSchedules
-                    .GroupBy(s => new { s.TimeSlotId, InstructorId = allocations.First(a => a.Id == s.AllocationId).InstructorId })
-                    .Any(g => g.Count() > 1);
-
-                if (conflictFound)
+                if (HasScheduleConflicts(newSchedules, allocations))
                 {
                     ViewBag.ErrorMessage = "Conflict detected! Could not resolve schedule.";
                     return View("Generated", new List<Schedule>());
                 }
 
-                var existingSchedules = await _context.Schedules.AsNoTracking().ToListAsync();
-                foreach (var schedule in existingSchedules)
-                {
-                    _context.Entry(schedule).State = EntityState.Deleted;
-                }
-
-                await _context.SaveChangesAsync();
-
-                await _context.Schedules.AddRangeAsync(newSchedules);
-                var saved = await _context.SaveChangesAsync();
-
-                if (saved == 0)
-                {
-                    ViewBag.ErrorMessage = "Nothing was saved to the database. Possible issue with schedule data.";
-                    return View("Generated", new List<Schedule>());
-                }
+                await ReplaceOldSchedulesAsync(newSchedules);
 
                 var finalSchedules = await _context.Schedules
                     .Include(s => s.Allocation).ThenInclude(a => a.Course)
@@ -199,6 +78,133 @@ namespace Scheduling.Controllers
                 ViewBag.ErrorMessage = $"Error: {ex.Message}";
                 return View("Generated", new List<Schedule>());
             }
+        }
+
+        private async Task<List<Allocation>> GetAllocationsAsync()
+        {
+            return await _context.Allocations
+                .Include(a => a.Course)
+                .Include(a => a.Instructor)
+                .Include(a => a.Section)
+                .AsNoTracking()
+                .OrderBy(a => a.Instructor.FullName)
+                .ToListAsync();
+        }
+
+        private async Task<List<TimeSlot>> GetOrderedTimeSlotsAsync()
+        {
+            var slots = await _context.TimeSlots.Include(ts => ts.DaysOfWeek).AsNoTracking().ToListAsync();
+            return slots.OrderBy(ts => ts.DaysOfWeek.Id).ThenBy(ts => ts.From).ToList();
+        }
+
+        private bool TryAssignSchedule(
+            Allocation allocation,
+            List<TimeSlot> orderedSlots,
+            List<Schedule> newSchedules,
+            Dictionary<(int, int), bool> instructorSlotMap,
+            Dictionary<(int, int), bool> sectionSlotMap,
+            Dictionary<int, int> instructorHoursMap,
+            Dictionary<(int, string), int> sectionDayHoursMap,
+            Dictionary<int, HashSet<string>> sectionScheduledDays,
+            Dictionary<(int, string), List<TimeSlot>> instructorDaySlots
+        )
+        {
+            var instructorId = allocation.InstructorId;
+            var sectionId = allocation.SectionId;
+            var creditHour = allocation.Course.CreditHour;
+
+            if (!sectionScheduledDays.ContainsKey(sectionId))
+                sectionScheduledDays[sectionId] = new HashSet<string>();
+
+            var rotatedSlots = orderedSlots
+                .Skip(sectionId % 5)
+                .Concat(orderedSlots.Take(sectionId % 5))
+                .ToList();
+
+            var prioritizedSlots = rotatedSlots.OrderByDescending(ts =>
+            {
+                var day = ts.DaysOfWeek.Name;
+                var score = 0;
+
+                if (!sectionScheduledDays[sectionId].Contains(day)) score += 2;
+
+                var existing = instructorDaySlots.TryGetValue((instructorId, day), out var list) ? list : new();
+                if (!existing.Any()) score += 2;
+                else
+                {
+                    var slotIndices = existing.Select(e => orderedSlots.FindIndex(s => s.Id == e.Id)).ToList();
+                    var index = orderedSlots.FindIndex(s => s.Id == ts.Id);
+
+                    if (slotIndices.Contains(index - 1) && slotIndices.Contains(index + 1)) return -1000;
+                    if (!slotIndices.Contains(index - 1) && !slotIndices.Contains(index + 1)) score += 3;
+                    if (slotIndices.Contains(index - 1) || slotIndices.Contains(index + 1)) score -= 1;
+
+                    score *= creditHour;
+                }
+
+                return score;
+            }).ToList();
+
+            foreach (var ts in prioritizedSlots)
+            {
+                var timeSlotId = ts.Id;
+                var day = ts.DaysOfWeek.Name;
+
+                if (instructorSlotMap.ContainsKey((instructorId, timeSlotId)) ||
+                    sectionSlotMap.ContainsKey((sectionId, timeSlotId)))
+                    continue;
+
+                var currentIHours = instructorHoursMap.TryGetValue(instructorId, out var iHrs) ? iHrs : 0;
+                var currentSDHours = sectionDayHoursMap.TryGetValue((sectionId, day), out var sHrs) ? sHrs : 0;
+
+                if (currentIHours + creditHour > MaxTeachingLoad ||
+                    currentSDHours + creditHour > MaxLearningHoursPerDay)
+                    continue;
+
+                var has5Days = sectionScheduledDays[sectionId].Count >= 5;
+                var isNewDay = !sectionScheduledDays[sectionId].Contains(day);
+                if (has5Days && isNewDay) continue;
+
+                newSchedules.Add(new Schedule
+                {
+                    AllocationId = allocation.Id,
+                    TimeSlotId = timeSlotId
+                });
+
+                instructorSlotMap[(instructorId, timeSlotId)] = true;
+                sectionSlotMap[(sectionId, timeSlotId)] = true;
+                instructorHoursMap[instructorId] = currentIHours + creditHour;
+                sectionDayHoursMap[(sectionId, day)] = currentSDHours + creditHour;
+                sectionScheduledDays[sectionId].Add(day);
+
+                if (!instructorDaySlots.ContainsKey((instructorId, day)))
+                    instructorDaySlots[(instructorId, day)] = new();
+                instructorDaySlots[(instructorId, day)].Add(ts);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HasScheduleConflicts(List<Schedule> schedules, List<Allocation> allocations)
+        {
+            return schedules
+                .GroupBy(s => new { s.TimeSlotId, InstructorId = allocations.First(a => a.Id == s.AllocationId).InstructorId })
+                .Any(g => g.Count() > 1);
+        }
+
+        private async Task ReplaceOldSchedulesAsync(List<Schedule> newSchedules)
+        {
+            var old = await _context.Schedules.AsNoTracking().ToListAsync();
+            foreach (var schedule in old)
+            {
+                _context.Entry(schedule).State = EntityState.Deleted;
+            }
+            await _context.SaveChangesAsync();
+
+            await _context.Schedules.AddRangeAsync(newSchedules);
+            await _context.SaveChangesAsync();
         }
 
 
