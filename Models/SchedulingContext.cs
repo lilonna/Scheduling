@@ -17,19 +17,21 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Allocation> Allocations { get; set; }
 
+    public virtual DbSet<Batch> Batchs { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Course> Courses { get; set; }
 
     public virtual DbSet<DaysOfWeek> DaysOfWeeks { get; set; }
 
+    public virtual DbSet<Department> Departments { get; set; }
+
     public virtual DbSet<Instructor> Instructors { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
     public virtual DbSet<Section> Sections { get; set; }
-
-    public virtual DbSet<Table1> Table1s { get; set; }
 
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
 
@@ -57,6 +59,11 @@ public partial class SchedulingContext : DbContext
                 .HasConstraintName("FK_Allocations_Sections");
         });
 
+        modelBuilder.Entity<Batch>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -71,6 +78,11 @@ public partial class SchedulingContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_tenats");
 
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<Department>(entity =>
+        {
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
@@ -99,6 +111,14 @@ public partial class SchedulingContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_rooms");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Batch).WithMany(p => p.Sections)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Sections_Batchs");
+
+            entity.HasOne(d => d.Department).WithMany(p => p.Sections)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Sections_Departments");
         });
 
         modelBuilder.Entity<TimeSlot>(entity =>

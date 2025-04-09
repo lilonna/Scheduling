@@ -14,11 +14,18 @@ public partial class Section
     [StringLength(50)]
     public string Name { get; set; } = null!;
 
-    public int Batch { get; set; }
+    public int BatchId { get; set; }
 
-    [StringLength(50)]
-    public string DepartmentId { get; set; } = null!;
+    public int DepartmentId { get; set; }
 
     [InverseProperty("Section")]
     public virtual ICollection<Allocation> Allocations { get; set; } = new List<Allocation>();
+
+    [ForeignKey("BatchId")]
+    [InverseProperty("Sections")]
+    public virtual Batch Batch { get; set; } = null!;
+
+    [ForeignKey("DepartmentId")]
+    [InverseProperty("Sections")]
+    public virtual Department Department { get; set; } = null!;
 }

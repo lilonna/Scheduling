@@ -17,6 +17,8 @@ public partial class Allocation
 
     public int SectionId { get; set; }
 
+    public int ContactHour { get; set; }
+
     [ForeignKey("CourseId")]
     [InverseProperty("Allocations")]
     public virtual Course Course { get; set; } = null!;

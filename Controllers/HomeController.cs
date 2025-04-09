@@ -17,9 +17,6 @@ namespace Scheduling.Controllers
             _logger = logger;
             _context = context;
         }
-
-
-
         public async Task<IActionResult> Generate()
         {
             try
@@ -35,19 +32,27 @@ namespace Scheduling.Controllers
                 var sectionScheduledDays = new Dictionary<int, HashSet<string>>();
                 var instructorDaySlots = new Dictionary<(int, string), List<TimeSlot>>();
 
-                foreach (var allocation in allocations)
-                {
-                    var assigned = TryAssignSchedule(
-                        allocation, orderedSlots, newSchedules,
-                        instructorSlotMap, sectionSlotMap,
-                        instructorHoursMap, sectionDayHoursMap,
-                        sectionScheduledDays, instructorDaySlots
-                    );
+                var groupedAllocations = allocations
+                    .GroupBy(a => new { a.InstructorId, a.CourseId })
+                    .ToList();
 
-                    if (!assigned)
+                foreach (var group in groupedAllocations)
+                {
+                    foreach (var allocation in group)
                     {
-                        ViewBag.ErrorMessage = $"Unable to schedule course {allocation.Course.Name} for section {allocation.Section.Name}.";
-                        return View("Generated", new List<Schedule>());
+                        var assigned = TryAssignSchedule(
+                            allocation, orderedSlots, newSchedules,
+                            instructorSlotMap, sectionSlotMap,
+                            instructorHoursMap, sectionDayHoursMap,
+                            sectionScheduledDays, instructorDaySlots,
+                            group.ToList()
+                        );
+
+                        if (!assigned)
+                        {
+                            ViewBag.ErrorMessage = $"Unable to schedule course {allocation.Course.Name} for section {allocation.Section.Name}.";
+                            return View("Generated", new List<Schedule>());
+                        }
                     }
                 }
 
@@ -80,23 +85,6 @@ namespace Scheduling.Controllers
             }
         }
 
-        private async Task<List<Allocation>> GetAllocationsAsync()
-        {
-            return await _context.Allocations
-                .Include(a => a.Course)
-                .Include(a => a.Instructor)
-                .Include(a => a.Section)
-                .AsNoTracking()
-                .OrderBy(a => a.Instructor.FullName).ThenBy(a => a.Course.Name)
-                .ToListAsync();
-        }
-
-        private async Task<List<TimeSlot>> GetOrderedTimeSlotsAsync()
-        {
-            var slots = await _context.TimeSlots.Include(ts => ts.DaysOfWeek).AsNoTracking().ToListAsync();
-            return slots.OrderBy(ts => ts.DaysOfWeek.Id).ThenBy(ts => ts.From).ToList();
-        }
-
         private bool TryAssignSchedule(
             Allocation allocation,
             List<TimeSlot> orderedSlots,
@@ -106,7 +94,8 @@ namespace Scheduling.Controllers
             Dictionary<int, int> instructorHoursMap,
             Dictionary<(int, string), int> sectionDayHoursMap,
             Dictionary<int, HashSet<string>> sectionScheduledDays,
-            Dictionary<(int, string), List<TimeSlot>> instructorDaySlots
+            Dictionary<(int, string), List<TimeSlot>> instructorDaySlots,
+            List<Allocation> sameCourseGroup
         )
         {
             var instructorId = allocation.InstructorId;
@@ -140,6 +129,22 @@ namespace Scheduling.Controllers
                     if (slotIndices.Contains(index - 1) || slotIndices.Contains(index + 1)) score -= 1;
 
                     score *= creditHour;
+                }
+
+                // Bonus for back-to-back same-course same-instructor
+                if (sameCourseGroup.Count > 1)
+                {
+                    var sameDaySchedules = newSchedules
+                        .Where(s => sameCourseGroup.Any(g => g.Id == s.AllocationId) &&
+                                    orderedSlots.FirstOrDefault(x => x.Id == s.TimeSlotId)?.DaysOfWeek.Name == day)
+                        .ToList();
+
+                    if (sameDaySchedules.Any(s =>
+                        Math.Abs(orderedSlots.FindIndex(x => x.Id == s.TimeSlotId) -
+                                 orderedSlots.FindIndex(x => x.Id == ts.Id)) == 1))
+                    {
+                        score += 5;
+                    }
                 }
 
                 return score;
@@ -187,6 +192,25 @@ namespace Scheduling.Controllers
             return false;
         }
 
+
+        private async Task<List<Allocation>> GetAllocationsAsync()
+        {
+            return await _context.Allocations
+                .Include(a => a.Course)
+                .Include(a => a.Instructor)
+                .Include(a => a.Section)
+                .AsNoTracking()
+                .OrderBy(a => a.Instructor.FullName).ThenBy(a => a.Course.Name)
+                .ToListAsync();
+        }
+
+        private async Task<List<TimeSlot>> GetOrderedTimeSlotsAsync()
+        {
+            var slots = await _context.TimeSlots.Include(ts => ts.DaysOfWeek).AsNoTracking().ToListAsync();
+            return slots.OrderBy(ts => ts.DaysOfWeek.Id).ThenBy(ts => ts.From).ToList();
+        }
+
+        
         private bool HasScheduleConflicts(List<Schedule> schedules, List<Allocation> allocations)
         {
             return schedules
