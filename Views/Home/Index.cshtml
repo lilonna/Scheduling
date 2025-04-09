@@ -10,3 +10,48 @@
     <button type="submit" class="btn btn-primary">Generate Schedule</button>
 </form>
 
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container mt-5">
+    <div class="jumbotron text-center bg-light p-5 rounded">
+        <h1 class="display-4">Welcome to Class Scheduler</h1>
+        <p class="lead">Efficiently manage and optimize university class schedules with ease.</p>
+        <hr class="my-4">
+        <p>This platform helps you generate conflict-free, optimized teaching schedules for instructors and sections.</p>
+        <a class="btn btn-primary btn-lg" href="/Schedule/Generate" role="button">Generate Schedule</a>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Instructors</h5>
+                    <p class="card-text">Add, update, and assign teaching loads to instructors.</p>
+                    <a href="/Instructors" class="btn btn-outline-primary">Go to Instructors</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mt-4 mt-md-0">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Courses</h5>
+                    <p class="card-text">Define courses, contact hours, and link them to departments.</p>
+                    <a href="/Courses" class="btn btn-outline-primary">Go to Courses</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mt-4 mt-md-0">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">View Schedules</h5>
+                    <p class="card-text">Explore generated schedules by section, instructor, or department.</p>
+                    <a href="/Schedule/View" class="btn btn-outline-primary">View Schedules</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
