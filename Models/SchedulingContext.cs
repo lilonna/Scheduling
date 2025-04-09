@@ -31,7 +31,13 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
+    public virtual DbSet<ScheduleSetting> ScheduleSettings { get; set; }
+
     public virtual DbSet<Section> Sections { get; set; }
+
+    public virtual DbSet<Ssbatch> Ssbatchs { get; set; }
+
+    public virtual DbSet<SstimeSlot> SstimeSlots { get; set; }
 
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
 
@@ -106,6 +112,15 @@ public partial class SchedulingContext : DbContext
                 .HasConstraintName("FK__Schedule__TimeSl__2DE6D218");
         });
 
+        modelBuilder.Entity<ScheduleSetting>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Department).WithMany(p => p.ScheduleSettings)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ScheduleSettings_Departments");
+        });
+
         modelBuilder.Entity<Section>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_rooms");
@@ -119,6 +134,28 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.Sections)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Sections_Departments");
+        });
+
+        modelBuilder.Entity<Ssbatch>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Ss).WithMany(p => p.Ssbatches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SSBatchs_ScheduleSettings");
+        });
+
+        modelBuilder.Entity<SstimeSlot>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Category).WithMany(p => p.SstimeSlots)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SSTimeSlots_Categories");
+
+            entity.HasOne(d => d.Ss).WithMany(p => p.SstimeSlots)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SSTimeSlots_ScheduleSettings");
         });
 
         modelBuilder.Entity<TimeSlot>(entity =>

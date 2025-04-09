@@ -15,5 +15,8 @@ public partial class Category
     public string Name { get; set; } = null!;
 
     [InverseProperty("Category")]
+    public virtual ICollection<SstimeSlot> SstimeSlots { get; set; } = new List<SstimeSlot>();
+
+    [InverseProperty("Category")]
     public virtual ICollection<TimeSlot> TimeSlots { get; set; } = new List<TimeSlot>();
 }

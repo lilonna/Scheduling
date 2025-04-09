@@ -15,5 +15,8 @@ public partial class Department
     public string Name { get; set; } = null!;
 
     [InverseProperty("Department")]
+    public virtual ICollection<ScheduleSetting> ScheduleSettings { get; set; } = new List<ScheduleSetting>();
+
+    [InverseProperty("Department")]
     public virtual ICollection<Section> Sections { get; set; } = new List<Section>();
 }
