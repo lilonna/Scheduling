@@ -231,7 +231,40 @@ namespace Scheduling.Controllers
             await _context.SaveChangesAsync();
         }
 
+        public IActionResult ViewByCategory(int scheduleSettingId)
+        {
+            var categoryIds = _context.SstimeSlots
+                .Where(sst => sst.Ssid == scheduleSettingId)
+                .Select(sst => sst.CategoryId)
+                .ToList();
 
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(ts => ts.Category)
+                .Where(s => categoryIds.Contains(s.TimeSlot.CategoryId))
+                .ToList();
+
+            return View(schedules);
+        }
+
+        public IActionResult ViewByBatch(int scheduleSettingId)
+        {
+            var batchIds = _context.Ssbatchs
+                .Where(ssb => ssb.Ssid == scheduleSettingId)
+                .Select(ssb => ssb.BatchId)
+                .ToList();
+
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                .Include(s => s.TimeSlot)
+                .Where(s => batchIds.Contains(s.Allocation.Section.BatchId))
+                .ToList();
+
+            return View(schedules);
+        }
 
         public IActionResult Index()
         {
