@@ -12,7 +12,7 @@ public partial class SchedulingContext : DbContext
 
     public SchedulingContext(DbContextOptions<SchedulingContext> options)
         : base(options)
-    {
+    { 
     }
 
     public virtual DbSet<Allocation> Allocations { get; set; }
@@ -106,6 +106,10 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.Allocation).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Schedule__Alloca__2CF2ADDF");
+
+            entity.HasOne(d => d.Ss).WithMany(p => p.Schedules)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Schedules_ScheduleSettings");
 
             entity.HasOne(d => d.TimeSlot).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)

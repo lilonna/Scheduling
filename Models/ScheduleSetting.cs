@@ -21,6 +21,9 @@ public partial class ScheduleSetting
     public virtual Department Department { get; set; } = null!;
 
     [InverseProperty("Ss")]
+    public virtual ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
+
+    [InverseProperty("Ss")]
     public virtual ICollection<Ssbatch> Ssbatches { get; set; } = new List<Ssbatch>();
 
     [InverseProperty("Ss")]
