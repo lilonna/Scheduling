@@ -1,32 +1,26 @@
-﻿@model List<Scheduling.Models.Schedule>
+﻿@model IEnumerable<Scheduling.Models.Schedule>
 
-@{
-    ViewData["Title"] = "Schedules by Category";
-}
+<h2>Schedules for the selected Category</h2>
 
-<h2>Schedules by Category</h2>
-
-<table class="table table-bordered table-striped">
+<table class="table">
     <thead>
         <tr>
-            <th>Category</th>
-            <th>Section</th>
             <th>Course</th>
             <th>Instructor</th>
+            <th>Section</th>
+            <th>Time Slot</th>
             <th>Day</th>
-            <th>Start - End</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var schedule in Model)
         {
             <tr>
-                <td>@schedule.TimeSlot.Category.Name</td>
-                <td>@schedule.Allocation.Section.Name</td>
                 <td>@schedule.Allocation.Course.Name</td>
                 <td>@schedule.Allocation.Instructor.FullName</td>
+                <td>@schedule.Allocation.Section.Name</td>
+                <td>@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
                 <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
-                <td>@schedule.TimeSlot.From- @schedule.TimeSlot.To</td>
             </tr>
         }
     </tbody>
