@@ -1,0 +1,33 @@
+﻿@model IEnumerable<IGrouping<Instructor, Schedule>>
+
+@{
+    ViewData["Title"] = "Schedules by Instructor";
+}
+
+<h1>Schedules by Instructor</h1>
+
+@foreach (var instructorGroup in Model)
+{
+    <h2>@instructorGroup.Key.FullName</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Course</th>
+                <th>Section</th>
+                <th>Day</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var schedule in instructorGroup)
+            {
+                <tr>
+                    <td>@schedule.Allocation.Course.Name</td>
+                    <td>@schedule.Allocation.Section.Name</td>
+                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
+                    <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

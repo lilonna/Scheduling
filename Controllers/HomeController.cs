@@ -274,37 +274,25 @@ namespace Scheduling.Controllers
             return View(schedules);
         }
 
-        // View by Instructor
-        //public IActionResult ViewByInstructor(int instructorId)
-        //{
-        //    var schedules = _context.Schedules
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Course)
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Section).ThenInclude(sec => sec.Batch)
-        //        .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
-        //        .Where(s => s.Allocation.InstructorId == instructorId)
-        //        .ToList();
+        //View by Instructor
+     public IActionResult ViewAllSchedulesByInstructor()
+{
+    var schedulesByInstructor = _context.Schedules
+        .Include(s => s.Allocation)
+            .ThenInclude(a => a.Instructor)
+        .Include(s => s.Allocation)
+            .ThenInclude(a => a.Course)
+        .Include(s => s.Allocation)
+            .ThenInclude(a => a.Section)
+        .Include(s => s.TimeSlot)
+            .ThenInclude(ts => ts.DaysOfWeek)
+        .AsNoTracking()
+        .ToList()
+        .GroupBy(s => s.Allocation.Instructor)
+        .ToList();
 
-
-        //    return View( schedules);
-        //}
-
-        //public IActionResult ViewByInstructor()
-        //{
-        //    int testInstructorId = 1; // Replace with an ID you know exists
-        //    var schedules = _context.Schedules
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Course)
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Section).ThenInclude(sec => sec.Batch)
-        //        .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
-        //        .Where(s => s.Allocation.InstructorId == testInstructorId)
-        //        .ToList();
-
-        //    return View(schedules);
-        //}
-
+    return View("SchedulesByInstructor", schedulesByInstructor);
+}
 
 
 
