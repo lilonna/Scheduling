@@ -274,6 +274,37 @@ namespace Scheduling.Controllers
             return View(schedules);
         }
 
+        // View by Instructor
+        public IActionResult ViewByInstructor(int instructorId)
+        {
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section).ThenInclude(sec => sec.Batch)
+                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                .Where(s => s.Allocation.InstructorId == instructorId)
+                .ToList();
+
+            ViewBag.Instructor = _context.Instructors.FirstOrDefault(i => i.Id == instructorId)?.FullName ?? "Unknown";
+            return View("ViewByInstructor", schedules);
+        }
+
+        // View by Section
+        public IActionResult ViewBySection(int sectionId)
+        {
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                .Where(s => s.Allocation.SectionId == sectionId)
+                .ToList();
+
+            ViewBag.Section = _context.Sections.FirstOrDefault(s => s.Id == sectionId)?.Name ?? "Unknown";
+            return View("ViewBySection", schedules);
+        }
 
 
         public IActionResult Index()
