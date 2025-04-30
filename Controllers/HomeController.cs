@@ -286,8 +286,8 @@ namespace Scheduling.Controllers
                 .Where(s => s.Allocation.InstructorId == instructorId)
                 .ToList();
 
-            ViewBag.Instructor = _context.Instructors.FirstOrDefault(i => i.Id == instructorId)?.FullName ?? "Unknown";
-            return View("ViewByInstructor", schedules);
+           
+            return View( schedules);
         }
 
         // View by Section

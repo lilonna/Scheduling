@@ -1,33 +1,79 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@* 
 @model List<Scheduling.Models.Schedule>
+
 @{
-    ViewData["Title"] = "Schedule by Instructor";
+    ViewData["Title"] = "Schedules by Batch";
+    var groupedByInstructor = Model.GroupBy(s => s.Allocation.Instructor); // group schedules by Batch
 }
-<h2>Schedule for Instructor: @ViewBag.Instructor</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Course</th>
-            <th>Section</th>
-            <th>Batch</th>
-            <th>Time Slot</th>
-            <th>Day</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var s in Model)
-        {
+
+<h2>Schedules by Instructor</h2>
+
+@foreach (var instructorGroup in groupedByInstructor)
+{
+    <h3>Batch: @instructorGroup.Key.FullName</h3> <!-- Batch Name Title -->
+
+    <table class="table table-bordered table-striped">
+        <thead>
             <tr>
-                <td>@s.Allocation.Course.Name</td>
-                <td>@s.Allocation.Section.Name</td>
-                <td>@s.Allocation.Section.Batch.Name</td>
-                <td>@s.TimeSlot.From - @s.TimeSlot.To</td>
-                <td>@s.TimeSlot.DaysOfWeek.Name</td>
+                <th>Section</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Day</th>
+                <th>Start - End</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var schedule in instructorGroup)
+            {
+                <tr>
+                    <td>@schedule.Allocation.Section.Name</td>
+                    <td>@schedule.Allocation.Course.Name</td>
+                    <td>@schedule.Allocation.Section.Batch.Name</td>
+                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
+                    <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <br /> <!-- Add some spacing between tables -->
+}
+ *@
+ @model List<Scheduling.Models.Schedule>
+@{
+    ViewData["Title"] = "Schedules by Instructor";
+    var groupedByInstructor = Model.GroupBy(s => s.Allocation.Instructor);
+}
+
+<h2>Schedules by Instructor</h2>
+
+<p>Total Schedules: @Model.Count</p>
+
+@foreach (var instructorGroup in groupedByInstructor)
+{
+    <h3>Instructor: @instructorGroup.Key.FullName</h3>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Course</th>
+                <th>Batch</th>
+                <th>Day</th>
+                <th>Start - End</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var schedule in instructorGroup)
+            {
+                <tr>
+                    <td>@schedule.Allocation.Section.Name</td>
+                    <td>@schedule.Allocation.Course.Name</td>
+                    <td>@schedule.Allocation.Section.Batch.Name</td>
+                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
+                    <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
