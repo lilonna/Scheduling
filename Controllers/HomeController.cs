@@ -273,44 +273,76 @@ namespace Scheduling.Controllers
 
             return View(schedules);
         }
-
-        //View by Instructor
-     public IActionResult ViewAllSchedulesByInstructor()
-{
-    var schedulesByInstructor = _context.Schedules
-        .Include(s => s.Allocation)
-            .ThenInclude(a => a.Instructor)
-        .Include(s => s.Allocation)
-            .ThenInclude(a => a.Course)
-        .Include(s => s.Allocation)
-            .ThenInclude(a => a.Section)
-        .Include(s => s.TimeSlot)
-            .ThenInclude(ts => ts.DaysOfWeek)
-        .AsNoTracking()
-        .ToList()
-        .GroupBy(s => s.Allocation.Instructor)
-        .ToList();
-
-    return View("SchedulesByInstructor", schedulesByInstructor);
-}
-
-
-
-        // View by Section
-        public IActionResult ViewBySection(int sectionId)
+        public IActionResult ViewAllSchedulesByInstructor()
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation)
                     .ThenInclude(a => a.Course)
                 .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
-                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
-                .Where(s => s.Allocation.SectionId == sectionId)
+                    .ThenInclude(a => a.Section)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(ts => ts.DaysOfWeek)
+                .AsNoTracking()
                 .ToList();
 
-            ViewBag.Section = _context.Sections.FirstOrDefault(s => s.Id == sectionId)?.Name ?? "Unknown";
-            return View("ViewBySection", schedules);
+            var groupedSchedules = schedules
+        .GroupBy(s => s.Allocation.Instructor.Id)
+        .Select(g => new
+        {
+            Instructor = g.First().Allocation.Instructor,
+            Schedules = g.ToList()
+        })
+        .ToList();
+
+            return View("SchedulesByInstructor", groupedSchedules);
+
         }
+
+        public IActionResult ViewBySection()
+        {
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                        .ThenInclude(sec => sec.Batch)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(ts => ts.DaysOfWeek)
+                .AsNoTracking()
+                .ToList();
+
+            var groupedSchedules = schedules
+                .GroupBy(s => s.Allocation.Section.Id)
+                .Select(g => new
+                {
+                    Section = g.First().Allocation.Section,
+                    Schedules = g.ToList()
+                })
+                .ToList();
+
+            return View("ViewBySection", groupedSchedules);
+        }
+
+
+        // View by Section
+        //public IActionResult ViewBySection(int sectionId)
+        //{
+        //    var schedules = _context.Schedules
+        //        .Include(s => s.Allocation)
+        //            .ThenInclude(a => a.Course)
+        //        .Include(s => s.Allocation)
+        //            .ThenInclude(a => a.Instructor)
+        //        .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+        //        .Where(s => s.Allocation.SectionId == sectionId)
+        //        .ToList();
+
+        //    ViewBag.Section = _context.Sections.FirstOrDefault(s => s.Id == sectionId)?.Name ?? "Unknown";
+        //    return View("ViewBySection", schedules);
+        //}
 
 
         public IActionResult Index()

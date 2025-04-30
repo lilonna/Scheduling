@@ -1,4 +1,4 @@
-﻿@model IEnumerable<IGrouping<Instructor, Schedule>>
+﻿@model IEnumerable<dynamic>
 
 @{
     ViewData["Title"] = "Schedules by Instructor";
@@ -6,10 +6,10 @@
 
 <h1>Schedules by Instructor</h1>
 
-@foreach (var instructorGroup in Model)
+@foreach (var group in Model)
 {
-    <h2>@instructorGroup.Key.FullName</h2>
-    <table class="table">
+    <h2>@group.Instructor.FullName</h2>
+    <table class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th>Course</th>
@@ -19,7 +19,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var schedule in instructorGroup)
+            @foreach (var schedule in group.Schedules)
             {
                 <tr>
                     <td>@schedule.Allocation.Course.Name</td>
@@ -30,4 +30,5 @@
             }
         </tbody>
     </table>
+    <br />
 }
