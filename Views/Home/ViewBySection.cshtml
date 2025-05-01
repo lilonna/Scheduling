@@ -6,29 +6,34 @@
 
 <h1>Schedules by Section</h1>
 
-@foreach (var group in Model)
+@foreach (var batch in Model)
 {
-    <h2>Section: @group.Section.Name (Batch: @group.Section.Batch.Name)</h2>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Course</th>
-                <th>Instructor</th>
-                <th>Day</th>
-                <th>Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var schedule in group.Schedules)
-            {
+    <h2>Batch: @batch.BatchName</h2>
+
+    @foreach (var sectionGroup in batch.Sections)
+    {
+        <h3>Section: @sectionGroup.Section.Name</h3>
+        <table class="table table-bordered table-striped">
+            <thead>
                 <tr>
-                    <td>@schedule.Allocation.Course.Name</td>
-                    <td>@schedule.Allocation.Instructor.FullName</td>
-                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
-                    <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                    <th>Course</th>
+                    <th>Instructor</th>
+                    <th>Day</th>
+                    <th>Time</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-    <br />
+            </thead>
+            <tbody>
+                @foreach (var schedule in sectionGroup.Schedules)
+                {
+                    <tr>
+                        <td>@schedule.Allocation.Course.Name</td>
+                        <td>@schedule.Allocation.Instructor.FullName</td>
+                        <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
+                        <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <br />
+    }
 }

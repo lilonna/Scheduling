@@ -316,33 +316,28 @@ namespace Scheduling.Controllers
                 .ToList();
 
             var groupedSchedules = schedules
-                .GroupBy(s => s.Allocation.Section.Id)
-                .Select(g => new
+                .GroupBy(s => s.Allocation.Section.Batch.Name)
+                .OrderBy(g => g.Key)
+                .Select(batchGroup => new
                 {
-                    Section = g.First().Allocation.Section,
-                    Schedules = g.ToList()
+                    BatchName = batchGroup.Key,
+                    Sections = batchGroup
+                        .GroupBy(s => s.Allocation.Section.Id)
+                        .OrderBy(g => g.First().Allocation.Section.Name)
+                        .Select(sectionGroup => new
+                        {
+                            Section = sectionGroup.First().Allocation.Section,
+                            Schedules = sectionGroup
+                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Name)
+                                .ThenBy(s => s.TimeSlot.From)
+                                .ToList()
+                        })
+                        .ToList()
                 })
                 .ToList();
 
             return View("ViewBySection", groupedSchedules);
         }
-
-
-        // View by Section
-        //public IActionResult ViewBySection(int sectionId)
-        //{
-        //    var schedules = _context.Schedules
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Course)
-        //        .Include(s => s.Allocation)
-        //            .ThenInclude(a => a.Instructor)
-        //        .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
-        //        .Where(s => s.Allocation.SectionId == sectionId)
-        //        .ToList();
-
-        //    ViewBag.Section = _context.Sections.FirstOrDefault(s => s.Id == sectionId)?.Name ?? "Unknown";
-        //    return View("ViewBySection", schedules);
-        //}
 
 
         public IActionResult Index()
