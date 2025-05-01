@@ -328,7 +328,7 @@ namespace Scheduling.Controllers
                         {
                             Section = sectionGroup.First().Allocation.Section,
                             Schedules = sectionGroup
-                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Name)
+                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Id)
                                 .ThenBy(s => s.TimeSlot.From)
                                 .ToList()
                         })
@@ -338,6 +338,7 @@ namespace Scheduling.Controllers
 
             return View("ViewBySection", groupedSchedules);
         }
+
 
 
         public IActionResult Index()
