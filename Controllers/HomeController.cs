@@ -375,6 +375,18 @@ namespace Scheduling.Controllers
         {
             return View();
         }
+        public async Task<IActionResult> SwapSchedules()
+        {
+            var schedules = await _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(t => t.DaysOfWeek)
+                .ToListAsync();
+
+            return View(schedules);
+        }
+
 
         public IActionResult Privacy()
         {

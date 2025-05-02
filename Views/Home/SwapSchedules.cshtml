@@ -5,7 +5,7 @@
 }
 @model List<Scheduling.Models.Schedule>
 
-<form asp-action="SwapSchedules" method="post">
+<form asp-controller="Home" asp-action="SwapSchedules" method="post">
     <label for="scheduleId1">Schedule 1:</label>
     <select id="scheduleId1" name="scheduleId1">
         @foreach (var schedule in Model)
