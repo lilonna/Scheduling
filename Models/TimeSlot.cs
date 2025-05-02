@@ -16,11 +16,11 @@ public partial class TimeSlot
 
     public int DaysOfWeekId { get; set; }
 
-    [StringLength(50)]
-    public string From { get; set; } = null!;
+    [Column(TypeName = "datetime")]
+    public DateTime From { get; set; }
 
-    [StringLength(50)]
-    public string To { get; set; } = null!;
+    [Column(TypeName = "datetime")]
+    public DateTime To { get; set; }
 
     public int CategoryId { get; set; }
 

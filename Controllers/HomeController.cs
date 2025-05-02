@@ -302,15 +302,48 @@ namespace Scheduling.Controllers
             return View(groupedSchedules);
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
+        //{
+        //    var schedule1 = await _context.Schedules
+        //        .Include(s => s.Allocation)
+        //        .FirstOrDefaultAsync(s => s.Id == scheduleId1);
+
+        //    var schedule2 = await _context.Schedules
+        //        .Include(s => s.Allocation)
+        //        .FirstOrDefaultAsync(s => s.Id == scheduleId2);
+
+        //    if (schedule1 == null || schedule2 == null)
+        //    {
+        //        return NotFound("One or both schedules not found.");
+        //    }
+
+        //    // Swap the AllocationId between the two schedules
+        //    var tempAllocationId = schedule1.AllocationId;
+        //    schedule1.AllocationId = schedule2.AllocationId;
+        //    schedule2.AllocationId = tempAllocationId;
+
+        //    // Optionally, update other related properties if necessary
+
+        //    await _context.SaveChangesAsync();
+
+        //    return RedirectToAction("ViewAllSchedulesByInstructor");
+        //}
+
+
         [HttpPost]
         public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
             var schedule1 = await _context.Schedules
                 .Include(s => s.Allocation)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(t => t.DaysOfWeek)
                 .FirstOrDefaultAsync(s => s.Id == scheduleId1);
 
             var schedule2 = await _context.Schedules
                 .Include(s => s.Allocation)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(t => t.DaysOfWeek)
                 .FirstOrDefaultAsync(s => s.Id == scheduleId2);
 
             if (schedule1 == null || schedule2 == null)
@@ -318,17 +351,52 @@ namespace Scheduling.Controllers
                 return NotFound("One or both schedules not found.");
             }
 
+            // Get instructor IDs
+            var instructor1Id = schedule1.Allocation.InstructorId;
+            var instructor2Id = schedule2.Allocation.InstructorId;
+
+            // Get time slots
+            var timeSlot1 = schedule1.TimeSlot;
+            var timeSlot2 = schedule2.TimeSlot;
+
+            // Check for conflicts for instructor1 with timeSlot2
+            bool conflict1 = await _context.Schedules
+                .Include(s => s.TimeSlot)
+                .Where(s => s.Allocation.InstructorId == instructor1Id && s.Id != schedule1.Id)
+                .AnyAsync(s => s.TimeSlot.DaysOfWeekId == timeSlot2.DaysOfWeekId &&
+                               s.TimeSlot.From < timeSlot2.To &&
+                               s.TimeSlot.To > timeSlot2.From);
+
+            // Check for conflicts for instructor2 with timeSlot1
+            bool conflict2 = await _context.Schedules
+                .Include(s => s.TimeSlot)
+                .Where(s => s.Allocation.InstructorId == instructor2Id && s.Id != schedule2.Id)
+                .AnyAsync(s => s.TimeSlot.DaysOfWeekId == timeSlot1.DaysOfWeekId &&
+                               s.TimeSlot.From < timeSlot1.To &&
+                               s.TimeSlot.To > timeSlot1.From);
+
+            if (conflict1 || conflict2)
+            {
+                ModelState.AddModelError("", "Swapping these schedules would result in a conflict.");
+                var schedules = await _context.Schedules
+                    .Include(s => s.Allocation)
+                        .ThenInclude(a => a.Instructor)
+                    .Include(s => s.TimeSlot)
+                        .ThenInclude(t => t.DaysOfWeek)
+                    .ToListAsync();
+                return View(schedules);
+            }
+
             // Swap the AllocationId between the two schedules
             var tempAllocationId = schedule1.AllocationId;
             schedule1.AllocationId = schedule2.AllocationId;
             schedule2.AllocationId = tempAllocationId;
 
-            // Optionally, update other related properties if necessary
-
             await _context.SaveChangesAsync();
 
             return RedirectToAction("ViewAllSchedulesByInstructor");
         }
+
 
         public IActionResult ViewBySection()
         {

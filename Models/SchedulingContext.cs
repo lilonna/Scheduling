@@ -12,7 +12,7 @@ public partial class SchedulingContext : DbContext
 
     public SchedulingContext(DbContextOptions<SchedulingContext> options)
         : base(options)
-    { 
+    {
     }
 
     public virtual DbSet<Allocation> Allocations { get; set; }
