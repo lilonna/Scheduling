@@ -288,16 +288,46 @@ namespace Scheduling.Controllers
                 .ToList();
 
             var groupedSchedules = schedules
-        .GroupBy(s => s.Allocation.Instructor.Id)
-        .Select(g => new
+                .GroupBy(s => s.Allocation.Instructor.Id)
+                .Select(g => new
+                {
+                    Instructor = g.First().Allocation.Instructor,
+                    Schedules = g
+                        .OrderBy(s => s.TimeSlot.DaysOfWeek.Id)
+                        .ThenBy(s => s.TimeSlot.From)
+                        .ToList()
+                })
+                .ToList();
+
+            return View(groupedSchedules);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
-            Instructor = g.First().Allocation.Instructor,
-            Schedules = g.ToList()
-        })
-        .ToList();
+            var schedule1 = await _context.Schedules
+                .Include(s => s.Allocation)
+                .FirstOrDefaultAsync(s => s.Id == scheduleId1);
 
-            return View("SchedulesByInstructor", groupedSchedules);
+            var schedule2 = await _context.Schedules
+                .Include(s => s.Allocation)
+                .FirstOrDefaultAsync(s => s.Id == scheduleId2);
 
+            if (schedule1 == null || schedule2 == null)
+            {
+                return NotFound("One or both schedules not found.");
+            }
+
+            // Swap the AllocationId between the two schedules
+            var tempAllocationId = schedule1.AllocationId;
+            schedule1.AllocationId = schedule2.AllocationId;
+            schedule2.AllocationId = tempAllocationId;
+
+            // Optionally, update other related properties if necessary
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("ViewAllSchedulesByInstructor");
         }
 
         public IActionResult ViewBySection()
