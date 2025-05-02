@@ -1,31 +1,48 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<Scheduling.Models.Schedule>
+
 @{
+    ViewData["Title"] = "Swap Schedules";
 }
-@model List<Scheduling.Models.Schedule>
+
+<h2>Swap Schedules</h2>
+
+<!-- Display validation errors -->
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
 
 <form asp-controller="Home" asp-action="SwapSchedules" method="post">
-    <label for="scheduleId1">Schedule 1:</label>
-    <select id="scheduleId1" name="scheduleId1">
-        @foreach (var schedule in Model)
-        {
-            <option value="@schedule.Id">
-                @schedule.Allocation.Instructor.FullName - @schedule.TimeSlot.DaysOfWeek.Name @schedule.TimeSlot.From.("hh\\:mm")
-            </option>
-        }
-    </select>
+    <div class="form-group">
+        <label for="scheduleId1">Schedule 1:</label>
+        <select id="scheduleId1" name="scheduleId1" class="form-control">
+            @foreach (var schedule in Model)
+            {
+                <option value="@schedule.Id">
+                    @schedule.Allocation.Instructor.FullName - @schedule.TimeSlot.DaysOfWeek.Name @schedule.TimeSlot.From.ToString("hh\\:mm") - @schedule.TimeSlot.To.ToString("hh\\:mm")
+                </option>
+            }
+        </select>
+    </div>
 
-    <label for="scheduleId2">Schedule 2:</label>
-    <select id="scheduleId2" name="scheduleId2">
-        @foreach (var schedule in Model)
-        {
-            <option value="@schedule.Id">
-                @schedule.Allocation.Instructor.FullName - @schedule.TimeSlot.DaysOfWeek.Name @schedule.TimeSlot.From.("hh\\:mm")
-            </option>
-        }
-    </select>
+    <div class="form-group">
+        <label for="scheduleId2">Schedule 2:</label>
+        <select id="scheduleId2" name="scheduleId2" class="form-control">
+            @foreach (var schedule in Model)
+            {
+                <option value="@schedule.Id">
+                    @schedule.Allocation.Instructor.FullName - @schedule.TimeSlot.DaysOfWeek.Name @schedule.TimeSlot.From.ToString("hh\\:mm") - @schedule.TimeSlot.To.ToString("hh\\:mm")
+                </option>
+            }
+        </select>
+    </div>
 
-    <button type="submit">Swap Schedules</button>
+    <button type="submit" class="btn btn-primary">Swap Schedules</button>
 </form>
-
