@@ -302,6 +302,35 @@ namespace Scheduling.Controllers
             return View(groupedSchedules);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetSchedulesBySection(int scheduleId)
+        {
+            var schedule = await _context.Schedules
+                .Include(s => s.Allocation)
+                .FirstOrDefaultAsync(s => s.Id == scheduleId);
+
+            if (schedule == null)
+            {
+                return NotFound();
+            }
+
+            var sectionId = schedule.Allocation.SectionId;
+
+            var schedules = await _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(t => t.DaysOfWeek)
+                .Where(s => s.Allocation.SectionId == sectionId && s.Id != scheduleId)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    displayText = $"{s.Allocation.Instructor.FullName} - {s.TimeSlot.DaysOfWeek.Name} {s.TimeSlot.From:hh\\:mm} - {s.TimeSlot.To:hh\\:mm}"
+                })
+                .ToListAsync();
+
+            return Json(schedules);
+        }
 
         [HttpPost]
         public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)

@@ -9,7 +9,7 @@
 
 @foreach (var batchGroup in groupedByBatch)
 {
-    <h3>Batch: @batchGroup.Key.Name</h3> <!-- Batch Name Title -->
+    <h3>Batch: @batchGroup.Key.Name</h3> @*  Batch Name Title *@
 
     <table class="table table-bordered table-striped">
         <thead>
@@ -35,5 +35,5 @@
         </tbody>
     </table>
 
-    <br /> <!-- Add some spacing between tables -->
+    <br /> @*  Add some spacing between tables  *@
 }

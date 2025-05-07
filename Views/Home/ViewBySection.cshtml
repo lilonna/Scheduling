@@ -13,27 +13,66 @@
     @foreach (var sectionGroup in batch.Sections)
     {
         <h3>Section: @sectionGroup.Section.Name</h3>
+
+        var days = new List<dynamic>();
+        foreach (var sched in sectionGroup.Schedules)
+        {
+            var day = sched.TimeSlot.DaysOfWeek;
+            if (!days.Any(d => d.Id == day.Id))
+            {
+                days.Add(day);
+            }
+        }
+        days = days.OrderBy(d => d.Id).ToList();
+
+        var timeSlots = new List<dynamic>();
+        foreach (var sched in sectionGroup.Schedules)
+        {
+            var ts = sched.TimeSlot;
+            if (!timeSlots.Any(t => t.From == ts.From && t.To == ts.To))
+            {
+                timeSlots.Add(ts);
+            }
+        }
+        timeSlots = timeSlots.OrderBy(t => t.From).ToList();
+
+        <!-- Rotated Weekly Schedule Table -->
+        <h5>Weekly Schedule</h5>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Course</th>
-                    <th>Instructor</th>
-                    <th>Day</th>
-                    <th>Time</th>
+                    <th>Day / Time</th>
+                    @foreach (var time in timeSlots)
+                    {
+                        <th>@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</th>
+                    }
                 </tr>
             </thead>
             <tbody>
-                @foreach (var schedule in sectionGroup.Schedules)
+                @foreach (var day in days)
                 {
                     <tr>
-                        <td>@schedule.Allocation.Course.Name</td>
-                        <td>@schedule.Allocation.Instructor.FullName</td>
-                        <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
-                        <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                        <td>@day.Name</td>
+                        @foreach (var time in timeSlots)
+                        {
+                            var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
+                            s.TimeSlot.From == time.From &&
+                            s.TimeSlot.To == time.To &&
+                            s.TimeSlot.DaysOfWeek.Id == day.Id);
+
+                            <td>
+                                @if (matchedSchedule != null)
+                                {
+                                    <div>@matchedSchedule.Allocation.Course.Name</div>
+                                    <div><small>@matchedSchedule.Allocation.Instructor.FullName</small></div>
+                                }
+                            </td>
+                        }
                     </tr>
                 }
             </tbody>
         </table>
-        <br />
+
+        <hr />
     }
 }
