@@ -4,76 +4,215 @@
     ViewData["Title"] = "Schedules by Section";
 }
 
-<h1>Schedules by Section</h1>
-
-@foreach (var batch in Model)
-{
-    <h2>Batch: @batch.BatchName</h2>
-
-    @foreach (var sectionGroup in batch.Sections)
-    {
-        <h3>Section: @sectionGroup.Section.Name</h3>
-
-        var days = new List<dynamic>();
-        foreach (var sched in sectionGroup.Schedules)
-        {
-            var day = sched.TimeSlot.DaysOfWeek;
-            if (!days.Any(d => d.Id == day.Id))
-            {
-                days.Add(day);
-            }
-        }
-        days = days.OrderBy(d => d.Id).ToList();
-
-        var timeSlots = new List<dynamic>();
-        foreach (var sched in sectionGroup.Schedules)
-        {
-            var ts = sched.TimeSlot;
-            if (!timeSlots.Any(t => t.From == ts.From && t.To == ts.To))
-            {
-                timeSlots.Add(ts);
-            }
-        }
-        timeSlots = timeSlots.OrderBy(t => t.From).ToList();
-
-        <!-- Weekly Schedule Table -->
-        <h5>Weekly Schedule</h5>
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Time Slot</th>
-                    @foreach (var day in days)
-                    {
-                        <th>@day.Name</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var time in timeSlots)
-                {
-                    <tr>
-                        <td>@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
-
-                        @foreach (var day in days)
-                        {
-                            var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
-                            s.TimeSlot.From == time.From &&
-                            s.TimeSlot.To == time.To &&
-                            s.TimeSlot.DaysOfWeek.Id == day.Id);
-
-                            <td>
-                                @if (matchedSchedule != null)
-                                {
-                                    <div>@matchedSchedule.Allocation.Course.Name</div>
-                                    <div><small>@matchedSchedule.Allocation.Instructor.FullName</small></div>
-                                }
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        <hr />
+<style>
+    .schedule-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+    
+    .batch-header {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .section-header {
+        color: #2980b9;
+        margin: 25px 0 15px 0;
+        padding-left: 10px;
+        border-left: 4px solid #3498db;
+    }
+    
+    .schedule-table {
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .schedule-table th {
+        background-color: #3498db;
+        color: white;
+        text-align: center;
+        vertical-align: middle;
+        font-weight: 500;
+    }
+    
+    .schedule-table td {
+        vertical-align: middle;
+        padding: 12px !important;
+    }
+    
+    .time-slot {
+        font-weight: 500;
+        color: #2c3e50;
+        background-color: #f1f8fe;
+    }
+    
+    .course-cell {
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .course-cell:hover {
+        background-color: #f1f8fe;
+    }
+    
+    .course-link {
+        color: #2980b9;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+        display: block;
+        padding: 5px;
+        border-radius: 4px;
+    }
+    
+    .course-link:hover {
+        color: #1a5276;
+        background-color: #eaf2f8;
+    }
+    
+    .no-class {
+        text-align: center;
+        color: #95a5a6;
+        font-style: italic;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+    
+    hr {
+        border-top: 1px dashed #bdc3c7;
+        margin: 30px 0;
+    }
+    
+    .table-title {
+        color: #3498db;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="container-fluid">
+    <h1 class="text-center mb-4" style="color: #2c3e50;">Schedules by Section</h1>
+
+    @foreach (var batch in Model)
+    {
+        <div class="schedule-container">
+            <h2 class="batch-header">Batch: @batch.BatchName</h2>
+
+            @foreach (var sectionGroup in batch.Sections)
+            {
+                <h3 class="section-header">Section: @sectionGroup.Section.Name</h3>
+
+                
+                    var days = new List<dynamic>();
+                    foreach (var sched in sectionGroup.Schedules)
+                    {
+                        var day = sched.TimeSlot.DaysOfWeek;
+                        if (!days.Any(d => d.Id == day.Id))
+                        {
+                            days.Add(day);
+                        }
+                    }
+                    days = days.OrderBy(d => d.Id).ToList();
+
+                    var timeSlots = new List<dynamic>();
+                    foreach (var sched in sectionGroup.Schedules)
+                    {
+                        var ts = sched.TimeSlot;
+                        if (!timeSlots.Any(t => t.From == ts.From && t.To == ts.To))
+                        {
+                            timeSlots.Add(ts);
+                        }
+                    }
+                    timeSlots = timeSlots.OrderBy(t => t.From).ToList();
+                
+
+                <!-- Weekly Schedule Table -->
+                <h5 class="table-title">Weekly Schedule</h5>
+                <table class="table table-bordered table-striped table-hover schedule-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Time Slot</th>
+                            @foreach (var day in days)
+                            {
+                                <th>@day.Name</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var time in timeSlots)
+                        {
+                            <tr>
+                                <td class="time-slot">@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
+
+                                @foreach (var day in days)
+                                {
+                                    var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
+                                    s.TimeSlot.From == time.From &&
+                                    s.TimeSlot.To == time.To &&
+                                    s.TimeSlot.DaysOfWeek.Id == day.Id);
+
+                                    <td class="course-cell">
+                                        @if (matchedSchedule != null)
+                                        {
+                                            <a tabindex="0"
+                                               class="course-link"
+                                               role="button"
+                                               data-bs-toggle="popover"
+                                               data-bs-trigger="hover focus"
+                                               title="@matchedSchedule.Allocation.Course.Name"
+                                               data-bs-content="Instructor: @matchedSchedule.Allocation.Instructor.FullName">
+                                                @matchedSchedule.Allocation.Course.Code
+                                                <small class="d-block text-muted">@matchedSchedule.Allocation.Course.Name</small>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="no-class">-</span>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <hr />
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Enable all Bootstrap popovers with custom styling
+        document.addEventListener('DOMContentLoaded', function () {
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl, {
+                    container: 'body',
+                    template: '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+                    html: true
+                });
+            });
+            
+            // Close popovers when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('[data-bs-toggle="popover"]')) {
+                    popoverTriggerList.forEach(function (trigger) {
+                        var popover = bootstrap.Popover.getInstance(trigger);
+                        if (popover) popover.hide();
+                    });
+                }
+            });
+        });
+    </script>
 }
