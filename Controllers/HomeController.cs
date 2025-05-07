@@ -257,6 +257,52 @@ namespace Scheduling.Controllers
 
             return View(schedules);
         }
+        public IActionResult SelectBatch()
+        {
+            var batches = _context.Batchs.ToList(); // or include sections if needed
+            return View(batches);
+        }
+        public IActionResult ViewSectionByBatch(int id)
+        {
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                        .ThenInclude(sec => sec.Batch)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(ts => ts.DaysOfWeek)
+                .AsNoTracking()
+                .Where(s => s.Allocation.Section.Batch.Id == id) // filter by batch ID
+                .ToList();
+
+            var groupedSchedules = schedules
+                .GroupBy(s => s.Allocation.Section.Batch.Name)
+                .OrderBy(g => g.Key)
+                .Select(batchGroup => new
+                {
+                    BatchName = batchGroup.Key,
+                    Sections = batchGroup
+                        .GroupBy(s => s.Allocation.Section.Id)
+                        .OrderBy(g => g.First().Allocation.Section.Name)
+                        .Select(sectionGroup => new
+                        {
+                            Section = sectionGroup.First().Allocation.Section,
+                            Schedules = sectionGroup
+                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Id)
+                                .ThenBy(s => s.TimeSlot.From)
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return View("ViewBySection", groupedSchedules);
+        }
+
+
 
         // Views for filtering by batch
         public IActionResult ViewByBatch(int scheduleSettingId)

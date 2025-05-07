@@ -1,0 +1,23 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model IEnumerable<Scheduling.Models.Batch>
+
+@{
+    ViewData["Title"] = "Select a Batch";
+}
+
+<h2>Select a Batch</h2>
+<ul class="list-group w-50">
+    @foreach (var batch in Model)
+    {
+        <li class="list-group-item">
+            <a asp-controller="Home" asp-action="ViewSectionByBatch" asp-route-id="@batch.Id">
+                @batch.Name
+            </a>
+        </li>
+    }
+</ul>
+

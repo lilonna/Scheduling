@@ -9,96 +9,92 @@
 
     @foreach (var batch in Model)
     {
-        <div class="card mb-4 shadow-sm" style="border: none;">
-            <div class="card-header" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
-                <h2 class="h5 mb-0 text-center" style="color: #495057;">Batch: @batch.BatchName</h2>
-            </div>
+        <div class="mb-5">
+            <h2 class=" mb-4" style="color: #495057; font-weight: 500;">Batch: @batch.BatchName</h2>
 
-            <div class="card-body">
-                @foreach (var sectionGroup in batch.Sections)
-                {
-                    <div class="mb-4">
-                        <h3 class="h4 mb-3 text-center" style="color: #6c757d; font-weight: 500;">Section: @sectionGroup.Section.Name</h3>
+            @foreach (var sectionGroup in batch.Sections)
+            {
+                <div class="mb-4 p-3" style="background-color: #f8f9fa; border-radius: 5px;">
+                    <h3 class="h4 mb-3 text-center" style="color: #6c757d; font-weight: 500;">Section: @sectionGroup.Section.Name</h3>
 
-                        @{
-                            var days = new List<dynamic>();
-                            foreach (var sched in sectionGroup.Schedules)
+                    @{
+                        var days = new List<dynamic>();
+                        foreach (var sched in sectionGroup.Schedules)
+                        {
+                            var day = sched.TimeSlot.DaysOfWeek;
+                            if (!days.Any(d => d.Id == day.Id))
                             {
-                                var day = sched.TimeSlot.DaysOfWeek;
-                                if (!days.Any(d => d.Id == day.Id))
-                                {
-                                    days.Add(day);
-                                }
+                                days.Add(day);
                             }
-                            days = days.OrderBy(d => d.Id).ToList();
-
-                            var timeSlots = new List<dynamic>();
-                            foreach (var sched in sectionGroup.Schedules)
-                            {
-                                var ts = sched.TimeSlot;
-                                if (!timeSlots.Any(t => t.From == ts.From && t.To == ts.To))
-                                {
-                                    timeSlots.Add(ts);
-                                }
-                            }
-                            timeSlots = timeSlots.OrderBy(t => t.From).ToList();
                         }
+                        days = days.OrderBy(d => d.Id).ToList();
 
-                        <!-- Weekly Schedule Table -->
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle" style="border-color: #dee2e6;">
-                                <thead>
-                                    <tr style="background-color: #f8f9fa;">
-                                        <th class="w-15" style="border-color: #dee2e6; color: #495057;">Time Slot</th>
+                        var timeSlots = new List<dynamic>();
+                        foreach (var sched in sectionGroup.Schedules)
+                        {
+                            var ts = sched.TimeSlot;
+                            if (!timeSlots.Any(t => t.From == ts.From && t.To == ts.To))
+                            {
+                                timeSlots.Add(ts);
+                            }
+                        }
+                        timeSlots = timeSlots.OrderBy(t => t.From).ToList();
+                    }
+
+                    <!-- Weekly Schedule Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" style="border-color: #dee2e6;">
+                            <thead>
+                                <tr style="background-color: #e9ecef;">
+                                    <th class="w-15" style="border-color: #dee2e6; color: #495057;">Time Slot</th>
+                                    @foreach (var day in days)
+                                    {
+                                        <th class="text-center" style="border-color: #dee2e6; color: #495057;">@day.Name</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var time in timeSlots)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold" style="background-color: #f8f9fa; border-color: #dee2e6; color: #495057;">@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
+
                                         @foreach (var day in days)
                                         {
-                                            <th class="text-center" style="border-color: #dee2e6; color: #495057;">@day.Name</th>
+                                            var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
+                                            s.TimeSlot.From == time.From &&
+                                            s.TimeSlot.To == time.To &&
+                                            s.TimeSlot.DaysOfWeek.Id == day.Id);
+
+                                            <td class="text-center" style="border-color: #dee2e6;">
+                                                @if (matchedSchedule != null)
+                                                {
+                                                    <div>
+                                                        <a tabindex="0"
+                                                           class="text-decoration-none"
+                                                           role="button"
+                                                           data-bs-toggle="popover"
+                                                           data-bs-trigger="hover focus"
+                                                           title="Instructor"
+                                                           data-bs-content=" @matchedSchedule.Allocation.Instructor.FullName"
+                                                           style="color: #3498db; font-weight: 500;">
+                                                            @matchedSchedule.Allocation.Course.Name
+                                                        </a>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted fst-italic">-</span>
+                                                }
+                                            </td>
                                         }
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var time in timeSlots)
-                                    {
-                                        <tr>
-                                            <td class="fw-semibold" style="background-color: #f8f9fa; border-color: #dee2e6; color: #495057;">@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
-
-                                            @foreach (var day in days)
-                                            {
-                                                var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
-                                                s.TimeSlot.From == time.From &&
-                                                s.TimeSlot.To == time.To &&
-                                                s.TimeSlot.DaysOfWeek.Id == day.Id);
-
-                                                <td class="text-center" style="border-color: #dee2e6;">
-                                                    @if (matchedSchedule != null)
-                                                    {
-                                                        <div>
-                                                            <a tabindex="0"
-                                                               class="text-decoration-none"
-                                                               role="button"
-                                                               data-bs-toggle="popover"
-                                                               data-bs-trigger="hover focus"
-                                                               title="Instructor: @matchedSchedule.Allocation.Instructor.FullName"
-                                                               data-bs-content="Course: @matchedSchedule.Allocation.Course.Name"
-                                                               style="color: #3498db; font-weight: 500;">
-                                                                @matchedSchedule.Allocation.Course.Name
-                                                            </a>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted fst-italic">-</span>
-                                                    }
-                                                </td>
-                                            }
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                }
-            </div>
+                </div>
+            }
         </div>
     }
 </div>
