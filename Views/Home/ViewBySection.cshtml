@@ -36,24 +36,25 @@
         }
         timeSlots = timeSlots.OrderBy(t => t.From).ToList();
 
-        <!-- Rotated Weekly Schedule Table -->
+        <!-- Weekly Schedule Table -->
         <h5>Weekly Schedule</h5>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Day / Time</th>
-                    @foreach (var time in timeSlots)
+                    <th>Time Slot</th>
+                    @foreach (var day in days)
                     {
-                        <th>@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</th>
+                        <th>@day.Name</th>
                     }
                 </tr>
             </thead>
             <tbody>
-                @foreach (var day in days)
+                @foreach (var time in timeSlots)
                 {
                     <tr>
-                        <td>@day.Name</td>
-                        @foreach (var time in timeSlots)
+                        <td>@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
+
+                        @foreach (var day in days)
                         {
                             var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
                             s.TimeSlot.From == time.From &&
