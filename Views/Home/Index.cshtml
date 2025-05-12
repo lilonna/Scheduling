@@ -2,54 +2,301 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
-@* <form asp-controller="Home" asp-action="Generate" method="post">
-    <button type="submit" class="btn btn-primary">Generate Schedule</button>
-</form> *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Class Scheduler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
 
-<div class="container mt-5">
-    <div class="jumbotron text-center bg-light p-5 rounded">
-        <h1 class="display-4">Welcome to Class Scheduler</h1>
-        <p class="lead">Efficiently manage and optimize university class schedules with ease.</p>
-        <hr class="my-4">
-        <p>This platform helps you generate conflict-free, optimized teaching schedules for instructors and sections.</p>
-        <a class="btn btn-primary btn-lg" href="/Home/Generate" role="button">Generate Schedule</a>
-    </div>
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80') center/cover;
+            opacity: 0.2;
+        }
 
-    <div class="row mt-5">
-        <div class="col-md-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Instructors</h5>
-                    <p class="card-text">Add, update, and assign teaching loads to instructors.</p>
-                    <a href="/Instructors" class="btn btn-outline-primary">Go to Instructors</a>
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 10px 25px;
+            font-weight: 600;
+            border-radius: 50px;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 50px;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            margin-top: auto;
+            padding: 2rem 0;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            text-decoration: none;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            transform: translateY(-5px);
+            color: var(--primary-color);
+        }
+
+        .stats-section {
+            background-color: var(--light-color);
+            padding: 4rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-content">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="display-4 mb-4 fw-bold">Welcome to Class Scheduler Pro</h1>
+                    <p class="lead mb-5">The ultimate solution for efficient university timetable management and optimization</p>
+                    <a href="/Home/Generate" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </a>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-4 mt-4 mt-md-0">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Courses</h5>
-                    <p class="card-text">Define courses, contact hours, and link them to departments.</p>
-                    <a href="/Courses" class="btn btn-outline-primary">Go to Courses</a>
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">150+</div>
+                    <p>Courses Managed</p>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">75+</div>
+                    <p>Instructors</p>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">200+</div>
+                    <p>Sections Scheduled</p>
+                </div>
+                <div class="col-md-3 stat-item">
+                    <div class="stat-number">99%</div>
+                    <p>Conflict-Free</p>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="col-md-4 mt-4 mt-md-0">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">View Schedules</h5>
-                    <p class="card-text">Explore generated schedules by section, instructor, or department.</p>
-                    <a href="/Home/Generate" class="btn btn-outline-primary">View Schedules</a>
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <div class="row justify-content-center mb-5">
+                <div class="col-lg-8 text-center">
+                    <h2 class="fw-bold mb-3">Powerful Features</h2>
+                    <p class="lead text-muted">Everything you need to create the perfect academic schedule</p>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h5 class="card-title">Instructor Management</h5>
+                            <p class="card-text">Easily manage teaching staff, assign courses, and track instructor availability.</p>
+                            <a href="/Instructors" class="btn btn-outline-primary mt-3">Manage Instructors</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <h5 class="card-title">Course Catalog</h5>
+                            <p class="card-text">Comprehensive course management with prerequisites, requirements, and department mapping.</p>
+                            <a href="/Courses" class="btn btn-outline-primary mt-3">Browse Courses</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <h5 class="card-title">Smart Scheduling</h5>
+                            <p class="card-text">AI-powered algorithm creates optimal schedules with zero conflicts.</p>
+                            <a href="/Home/Generate" class="btn btn-outline-primary mt-3">View Schedules</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-5 bg-light">
+        <div class="container text-center py-4">
+            <h2 class="fw-bold mb-4">Ready to Transform Your Scheduling Process?</h2>
+            <p class="lead mb-5">Join hundreds of universities using our platform to save time and eliminate scheduling headaches</p>
+            <a href="/Home/Generate" class="btn btn-primary btn-lg px-5 py-3">
+                <i class="fas fa-rocket me-2"></i>Get Started Now
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <h5>Class Scheduler Pro</h5>
+                    <p class="mt-3">The most advanced academic scheduling solution for universities and colleges.</p>
+                    <div class="social-icons mt-4">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled footer-links mt-3">
+                        <li class="mb-2"><a href="/">Home</a></li>
+                        <li class="mb-2"><a href="/Home/Generate">Schedules</a></li>
+                        <li class="mb-2"><a href="/Instructors">Instructors</a></li>
+                        <li class="mb-2"><a href="/Courses">Courses</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+                    <h5>Resources</h5>
+                    <ul class="list-unstyled footer-links mt-3">
+                        <li class="mb-2"><a href="#">Documentation</a></li>
+                        <li class="mb-2"><a href="#">API</a></li>
+                        <li class="mb-2"><a href="#">Support</a></li>
+                        <li class="mb-2"><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h5>Contact Us</h5>
+                    <ul class="list-unstyled footer-links mt-3">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 University Ave, Campus Town</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> (123) 456-7890</li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@classscheduler.edu</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; 2023 Class Scheduler Pro. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0">
+                        <a href="#" class="me-3">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
