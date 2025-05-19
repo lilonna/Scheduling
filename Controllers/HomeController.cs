@@ -531,7 +531,18 @@ namespace Scheduling.Controllers
 
             _context.SaveChanges();
             TempData["Success"] = "Room assignments generated successfully.";
-            return RedirectToAction("Index");
+            return RedirectToAction("ViewSectionRoomAssignments");
+
+        }
+        public IActionResult ViewSectionRoomAssignments()
+        {
+            var sectionRooms = _context.Sections
+                .Include(s => s.Room)
+                    .ThenInclude(r => r.Block)
+                .OrderBy(s => s.Name)
+                .ToList();
+
+            return View(sectionRooms);
         }
 
 

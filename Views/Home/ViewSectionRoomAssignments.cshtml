@@ -1,0 +1,35 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model IEnumerable<Scheduling.Models.Section>
+
+@{
+    ViewData["Title"] = "Section Room Assignments";
+}
+
+<h2>Section Room Assignments</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Section Name</th>
+            <th>Batch</th>
+            <th>Room Number</th>
+            <th>Block</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var section in Model)
+        {
+            <tr>
+                <td>@(section.Name)</td>
+                <td>@(section.Batch?.Name)</td>
+                <td>@(section.Room?.RoomNumber ?? "Not Assigned")</td>
+                <td>@(section.Room?.Block?.Name ?? "-")</td>
+            </tr>
+        }
+    </tbody>
+
+</table>
