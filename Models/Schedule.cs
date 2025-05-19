@@ -18,9 +18,15 @@ public partial class Schedule
     [Column("SSID")]
     public int Ssid { get; set; }
 
+    public int? RoomId { get; set; }
+
     [ForeignKey("AllocationId")]
     [InverseProperty("Schedules")]
     public virtual Allocation Allocation { get; set; } = null!;
+
+    [ForeignKey("RoomId")]
+    [InverseProperty("Schedules")]
+    public virtual Room? Room { get; set; }
 
     [ForeignKey("Ssid")]
     [InverseProperty("Schedules")]

@@ -19,6 +19,8 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Batch> Batchs { get; set; }
 
+    public virtual DbSet<Block> Blocks { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Course> Courses { get; set; }
@@ -28,6 +30,8 @@ public partial class SchedulingContext : DbContext
     public virtual DbSet<Department> Departments { get; set; }
 
     public virtual DbSet<Instructor> Instructors { get; set; }
+
+    public virtual DbSet<Room> Rooms { get; set; }
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
@@ -70,6 +74,11 @@ public partial class SchedulingContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
+        modelBuilder.Entity<Block>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
@@ -99,6 +108,17 @@ public partial class SchedulingContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
+        modelBuilder.Entity<Room>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Rooms_1");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Block).WithMany(p => p.Rooms)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Rooms_Blocks");
+        });
+
         modelBuilder.Entity<Schedule>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Schedule__3214EC07E140CA54");
@@ -106,6 +126,8 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.Allocation).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Schedule__Alloca__2CF2ADDF");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.Schedules).HasConstraintName("FK_Schedules_Rooms");
 
             entity.HasOne(d => d.Ss).WithMany(p => p.Schedules)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -138,6 +160,8 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.Sections)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Sections_Departments");
+
+            entity.HasOne(d => d.Room).WithMany(p => p.Sections).HasConstraintName("FK_Sections_Rooms");
         });
 
         modelBuilder.Entity<Ssbatch>(entity =>

@@ -18,6 +18,8 @@ public partial class Section
 
     public int DepartmentId { get; set; }
 
+    public int? RoomId { get; set; }
+
     [InverseProperty("Section")]
     public virtual ICollection<Allocation> Allocations { get; set; } = new List<Allocation>();
 
@@ -28,4 +30,8 @@ public partial class Section
     [ForeignKey("DepartmentId")]
     [InverseProperty("Sections")]
     public virtual Department Department { get; set; } = null!;
+
+    [ForeignKey("RoomId")]
+    [InverseProperty("Sections")]
+    public virtual Room? Room { get; set; }
 }
