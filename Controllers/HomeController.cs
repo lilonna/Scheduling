@@ -502,6 +502,37 @@ namespace Scheduling.Controllers
             return View("ViewBySection", groupedSchedules);
         }
 
+        [HttpPost]
+        public IActionResult GenerateSectionRoomAssignments()
+        {
+            var sections = _context.Sections
+                .Where(s => s.RoomId == null) // only assign if not already assigned
+                .OrderBy(s => s.Name)
+                .ToList();
+
+            var rooms = _context.Rooms
+                .OrderBy(r => r.RoomNumber)
+                .ToList();
+
+            if (!rooms.Any())
+            {
+                TempData["Error"] = "No rooms available. Please create rooms first.";
+                return RedirectToAction("Index");
+            }
+
+            int roomIndex = 0;
+            foreach (var section in sections)
+            {
+                section.RoomId = rooms[roomIndex].Id;
+
+                // Round-robin room assignment (so multiple sections can share rooms)
+                roomIndex = (roomIndex + 1) % rooms.Count;
+            }
+
+            _context.SaveChanges();
+            TempData["Success"] = "Room assignments generated successfully.";
+            return RedirectToAction("Index");
+        }
 
 
         public IActionResult Index()
