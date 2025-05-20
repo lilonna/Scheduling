@@ -34,6 +34,8 @@ namespace Scheduling.Controllers
                 var sectionDayHoursMap = new Dictionary<(int, string), int>();
                 var sectionScheduledDays = new Dictionary<int, HashSet<string>>();
                 var instructorDaySlots = new Dictionary<(int, string), List<TimeSlot>>();
+                var roomSlotMap = new Dictionary<(int roomId, int timeSlotId), bool>();
+
 
                 var groupedAllocations = allocations
                     .GroupBy(a => new { a.InstructorId, a.CourseId })
@@ -49,7 +51,9 @@ namespace Scheduling.Controllers
                             instructorHoursMap, sectionDayHoursMap,
                             sectionScheduledDays, instructorDaySlots,
                             group.ToList(),
+                              roomSlotMap,
                                 departmentToSSID
+                                   
                         );
 
                         if (!assigned)
@@ -100,6 +104,7 @@ namespace Scheduling.Controllers
       Dictionary<int, HashSet<string>> sectionScheduledDays,
       Dictionary<(int, string), List<TimeSlot>> instructorDaySlots,
       List<Allocation> sameCourseGroup,
+      Dictionary<(int roomId, int timeSlotId), bool> roomSlotMap,
       Dictionary<int, int> departmentToSSID
   )
         {
@@ -175,12 +180,29 @@ namespace Scheduling.Controllers
                 var isNewDay = !sectionScheduledDays[sectionId].Contains(day);
                 if (has5Days && isNewDay) continue;
 
+                int? assignedRoomId = allocation.Section.RoomId;
+                if (assignedRoomId != null && roomSlotMap.ContainsKey(((int)assignedRoomId, timeSlotId)))
+                {
+                    // Find alternative room that is free
+                    assignedRoomId = _context.Rooms
+                        .AsNoTracking()
+                        .ToList()
+                        .FirstOrDefault(r => !roomSlotMap.ContainsKey((r.Id, timeSlotId)))?.Id;
+
+                    if (assignedRoomId == null)
+                        return false; // no available room
+                }
+
+                // Assign and track
                 newSchedules.Add(new Schedule
                 {
                     AllocationId = allocation.Id,
                     TimeSlotId = timeSlotId,
+                    RoomId = assignedRoomId,
                     Ssid = departmentToSSID[allocation.Section.DepartmentId]
                 });
+                roomSlotMap[((int)assignedRoomId, timeSlotId)] = true;
+
 
                 instructorSlotMap[(instructorId, timeSlotId)] = true;
                 sectionSlotMap[(sectionId, timeSlotId)] = true;

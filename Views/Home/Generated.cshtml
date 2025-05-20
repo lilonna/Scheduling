@@ -27,6 +27,8 @@
                     <td>@schedule.Allocation.Section.Name</td>
                     <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
                     <td>@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
+                    <td>@schedule.Room?.RoomNumber ?? schedule.Allocation.Section.Room?.RoomNumber ?? "Not Assigned"</td>
+
                 </tr>
             }
         </tbody>
