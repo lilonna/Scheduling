@@ -15,7 +15,6 @@
     <thead>
         <tr>
             <th>Section Name</th>
-            <th>Batch</th>
             <th>Room Number</th>
             <th>Block</th>
         </tr>
@@ -25,7 +24,6 @@
         {
             <tr>
                 <td>@(section.Name)</td>
-                <td>@(section.Batch?.Name)</td>
                 <td>@(section.Room?.RoomNumber ?? "Not Assigned")</td>
                 <td>@(section.Room?.Block?.Name ?? "-")</td>
             </tr>
