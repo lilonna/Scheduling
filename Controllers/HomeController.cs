@@ -82,8 +82,9 @@ namespace Scheduling.Controllers
                     .ThenInclude(sec => sec.Room)
                     .ToListAsync();
 
-                ViewBag.SuccessMessage = "Schedule generated successfully and saved!";
-                return View("Generated", finalSchedules);
+                TempData["SuccessMessage"] = "Schedule generated successfully and saved!";
+                return RedirectToAction("Generated");
+
             }
             catch (Exception ex)
             {
@@ -282,29 +283,43 @@ namespace Scheduling.Controllers
 
             return View(schedules);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> ClearAllSchedules()
+        [HttpGet]
+        public async Task<IActionResult> Generated()
         {
-            var schedules = await _context.Schedules.ToListAsync();
-            _context.Schedules.RemoveRange(schedules);
-            await _context.SaveChangesAsync();
+            var schedules = await _context.Schedules
+                .Include(s => s.Room)
+                .Include(s => s.Allocation).ThenInclude(a => a.Course)
+                .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation).ThenInclude(a => a.Section)
+                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Room)
+                .ToListAsync();
 
-            TempData["SuccessMessage"] = "All schedules cleared!";
-            return RedirectToAction("Generated");
+            return View(schedules); // this will go to Views/YourControllerName/Generated.cshtml
         }
 
         [HttpPost]
-        public async Task<IActionResult> Regenerate()
-        {
-            // Clear first
-            var schedules = await _context.Schedules.ToListAsync();
-            _context.Schedules.RemoveRange(schedules);
-            await _context.SaveChangesAsync();
+public async Task<IActionResult> ClearAllSchedules()
+{
+    var schedules = await _context.Schedules.ToListAsync();
+    _context.Schedules.RemoveRange(schedules);
+    await _context.SaveChangesAsync();
 
-            // Then generate
-            return await Generate();
-        }
+    TempData["SuccessMessage"] = "All schedules cleared!";
+    return RedirectToAction("Generated");
+}
+
+[HttpPost]
+public async Task<IActionResult> Regenerate()
+{
+    // Clear first
+    var schedules = await _context.Schedules.ToListAsync();
+    _context.Schedules.RemoveRange(schedules);
+    await _context.SaveChangesAsync();
+
+    // Then generate
+    return await Generate();
+}
 
         public IActionResult SelectBatch()
         {
