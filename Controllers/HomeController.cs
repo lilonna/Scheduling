@@ -73,10 +73,13 @@ namespace Scheduling.Controllers
                 await ReplaceOldSchedulesAsync(newSchedules);
 
                 var finalSchedules = await _context.Schedules
+                    .Include(s => s.Room)
                     .Include(s => s.Allocation).ThenInclude(a => a.Course)
                     .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
                     .Include(s => s.Allocation).ThenInclude(a => a.Section)
                     .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                    .Include(s => s.Allocation) .ThenInclude(a => a.Section)
+                    .ThenInclude(sec => sec.Room)
                     .ToListAsync();
 
                 ViewBag.SuccessMessage = "Schedule generated successfully and saved!";
@@ -279,6 +282,30 @@ namespace Scheduling.Controllers
 
             return View(schedules);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ClearAllSchedules()
+        {
+            var schedules = await _context.Schedules.ToListAsync();
+            _context.Schedules.RemoveRange(schedules);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "All schedules cleared!";
+            return RedirectToAction("Generated");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Regenerate()
+        {
+            // Clear first
+            var schedules = await _context.Schedules.ToListAsync();
+            _context.Schedules.RemoveRange(schedules);
+            await _context.SaveChangesAsync();
+
+            // Then generate
+            return await Generate();
+        }
+
         public IActionResult SelectBatch()
         {
             var batches = _context.Batchs.ToList(); // or include sections if needed

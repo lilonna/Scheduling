@@ -158,6 +158,13 @@
         <button type="submit" class="btn btn-primary">Generate Room Assignments</button>
     </form>
 
+    <form asp-action="ClearAllSchedules" method="post" style="margin-top:10px;">
+        <button type="submit" class="btn btn-danger">Clear All Schedules</button>
+    </form>
+
+    <form asp-action="Regenerate" method="post" style="margin-top:10px;">
+        <button type="submit" class="btn btn-warning">Regenerate Schedule</button>
+    </form>
 
   @*   Stats Section *@
     <section class="stats-section">

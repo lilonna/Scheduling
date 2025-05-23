@@ -4,6 +4,7 @@
     ViewData["Title"] = "Generated schedule";
 }
 
+
 <h2 class="text-center mt-4">Generated Schedule</h2>
 
 @if (Model != null && Model.Any())
@@ -16,6 +17,7 @@
                 <th>Section</th>
                 <th>Day</th>
                 <th>Time</th>
+                <th>Room</th>
             </tr>
         </thead>
         <tbody>
@@ -27,9 +29,9 @@
                     <td>@schedule.Allocation.Section.Name</td>
                     <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
                     <td>@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
-                    <td>@schedule.Room?.RoomNumber ?? schedule.Allocation.Section.Room?.RoomNumber ?? "Not Assigned"</td>
-
+                    <td>@(schedule.Room?.RoomNumber ?? schedule.Allocation.Section.Room?.RoomNumber ?? "Not Assigned")</td>
                 </tr>
+
             }
         </tbody>
     </table>
