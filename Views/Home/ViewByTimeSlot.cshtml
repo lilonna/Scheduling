@@ -1,62 +1,29 @@
 ﻿@model IEnumerable<Scheduling.Models.Schedule>
 
-<h2 class="text-center mb-4" style="color: #2c3e50; font-weight: 600;">Schedules for the Selected Category</h2>
+<h2 class="text-center mb-4 text-dark font-weight-bold">Schedules for the Selected Category</h2>
 
 <div class="table-responsive">
-    <table class="table table-hover table-striped rounded" style="border-collapse: separate; border-spacing: 0; overflow: hidden;">
-        <thead class="thead-dark">
+    <table class="table table-hover table-striped rounded-lg overflow-hidden">
+        <thead class="bg-primary text-white">
             <tr>
-                <th style="background-color: #3498db; color: white; padding: 12px; border: none;">Course</th>
-                <th style="background-color: #3498db; color: white; padding: 12px; border: none;">Instructor</th>
-                <th style="background-color: #3498db; color: white; padding: 12px; border: none;">Section</th>
-                <th style="background-color: #3498db; color: white; padding: 12px; border: none;">Time Slot</th>
-                <th style="background-color: #3498db; color: white; padding: 12px; border: none;">Day</th>
+                <th class="p-3 border-0">Course</th>
+                <th class="p-3 border-0">Instructor</th>
+                <th class="p-3 border-0">Section</th>
+                <th class="p-3 border-0">Time Slot</th>
+                <th class="p-3 border-0">Day</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var schedule in Model)
             {
-                <tr style="transition: all 0.3s ease;">
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">@schedule.Allocation.Course.Name</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">@schedule.Allocation.Instructor.FullName</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">@schedule.Allocation.Section.Name</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">@schedule.TimeSlot.DaysOfWeek.Name</td>
+                <tr>
+                    <td class="p-3 border-bottom">@schedule.Allocation.Course.Name</td>
+                    <td class="p-3 border-bottom">@schedule.Allocation.Instructor.FullName</td>
+                    <td class="p-3 border-bottom">@schedule.Allocation.Section.Name</td>
+                    <td class="p-3 border-bottom">@schedule.TimeSlot.From - @schedule.TimeSlot.To</td>
+                    <td class="p-3 border-bottom">@schedule.TimeSlot.DaysOfWeek.Name</td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
-
-<style>
-    .table {
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-        transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .rounded {
-        border-radius: 8px !important;
-    }
-
-    .table thead th:first-child {
-        border-top-left-radius: 8px;
-    }
-
-    .table thead th:last-child {
-        border-top-right-radius: 8px;
-    }
-
-    .table tbody tr:last-child td:first-child {
-        border-bottom-left-radius: 8px;
-    }
-
-    .table tbody tr:last-child td:last-child {
-        border-bottom-right-radius: 8px;
-    }
-</style>

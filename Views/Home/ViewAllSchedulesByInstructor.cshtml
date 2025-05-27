@@ -5,12 +5,14 @@
 }
 
 <div class="container-fluid py-4">
-    <h1 class="text-center mb-5" style="color: #2c3e50; font-weight: 600; border-bottom: 2px solid #3498db; padding-bottom: 10px; display: inline-block;">Schedules by Instructor</h1>
+    <h1 class="text-center mb-5 text-dark font-weight-bold border-bottom border-primary pb-3 d-inline-block">
+        Schedules by Instructor
+    </h1>
 
     @foreach (var group in Model)
     {
-        <div class="card shadow mb-5" style="border-radius: 10px; border: none;">
-            <div class="card-header bg-primary text-white py-3" style="border-top-left-radius: 10px !important; border-top-right-radius: 10px !important;">
+        <div class="card shadow mb-5 rounded-lg">
+            <div class="card-header bg-primary text-white py-3 rounded-top">
                 <h2 class="mb-0">
                     <i class="fas fa-user-tie mr-2"></i>@group.Instructor.FullName
                 </h2>
@@ -20,25 +22,25 @@
                     <table class="table table-hover mb-0">
                         <thead class="thead-light">
                             <tr>
-                                <th style="padding: 15px; background-color: #f8f9fa; border-top: none;">Course</th>
-                                <th style="padding: 15px; background-color: #f8f9fa; border-top: none;">Section</th>
-                                <th style="padding: 15px; background-color: #f8f9fa; border-top: none;">Day</th>
-                                <th style="padding: 15px; background-color: #f8f9fa; border-top: none;">Time</th>
+                                <th class="p-3 border-top-0">Course</th>
+                                <th class="p-3 border-top-0">Section</th>
+                                <th class="p-3 border-top-0">Day</th>
+                                <th class="p-3 border-top-0">Time</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var schedule in group.Schedules)
                             {
-                                <tr style="transition: all 0.2s ease;">
-                                    <td style="padding: 15px; border-top: 1px solid #eee;">@schedule.Allocation.Course.Name</td>
-                                    <td style="padding: 15px; border-top: 1px solid #eee;">@schedule.Allocation.Section.Name</td>
-                                    <td style="padding: 15px; border-top: 1px solid #eee;">
-                                        <span class="badge badge-info p-2" style="background-color: #3498db; min-width: 70px; display: inline-block;">
+                                <tr>
+                                    <td class="p-3 border-top">@schedule.Allocation.Course.Name</td>
+                                    <td class="p-3 border-top">@schedule.Allocation.Section.Name</td>
+                                    <td class="p-3 border-top">
+                                        <span class="badge badge-primary p-2">
                                             @schedule.TimeSlot.DaysOfWeek.Name
                                         </span>
                                     </td>
-                                    <td style="padding: 15px; border-top: 1px solid #eee;">
-                                        <span class="badge badge-light p-2" style="background-color: #f8f9fa; color: #495057; font-weight: 500;">
+                                    <td class="p-3 border-top">
+                                        <span class="badge badge-light p-2 text-dark font-weight-normal">
                                             @($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")
                                         </span>
                                     </td>
@@ -52,26 +54,5 @@
     }
 </div>
 
-<style>
-    .table-hover tbody tr:hover {
-        background-color: rgba(52, 152, 219, 0.1);
-        transform: translateX(5px);
-    }
-
-    .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .badge {
-        border-radius: 4px;
-        font-size: 0.9rem;
-    }
-</style>
-
-<!-- Add Font Awesome for the user icon (optional) -->
+<!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
