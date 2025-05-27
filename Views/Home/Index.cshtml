@@ -14,50 +14,25 @@
 <body class="d-flex flex-column min-vh-100">
     <!-- Hero Section -->
     <section class="bg-primary bg-gradient text-white py-5 position-relative overflow-hidden">
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80') center/cover; opacity: 0.2;"></div>
         <div class="container position-relative">
             <div class="row justify-content-center">
                 <div class="col-lg-8 text-center">
-                    <h1 class="display-4 mb-4 fw-bold">Welcome to Class Scheduler Pro</h1>
-                    <p class="lead mb-5">The ultimate solution for efficient university timetable management and optimization</p>
+                    <h1 class="display-4 mb-4 fw-bold">Welcome to Class Scheduling</h1>
+                 
                     <a href="/Home/Generate" class="btn btn-light btn-lg me-3">
                         <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
                     </a>
-                    <a href="#features" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-info-circle me-2"></i>Learn More
-                    </a>
+
+                    <form asp-action="GenerateSectionRoomAssignments" method="post" class="container my-4">
+                        <button type="submit" class="btn btn-light btn-lg me-3">Generate Room Assignments</button>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
 
-    <form asp-action="GenerateSectionRoomAssignments" method="post" class="container my-4">
-        <button type="submit" class="btn btn-primary">Generate Room Assignments</button>
-    </form>
 
-    <!-- Stats Section -->
-    <section class="bg-light py-5">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-md-3 py-3">
-                    <div class="display-4 fw-bold text-primary">150+</div>
-                    <p>Courses Managed</p>
-                </div>
-                <div class="col-md-3 py-3">
-                    <div class="display-4 fw-bold text-primary">75+</div>
-                    <p>Instructors</p>
-                </div>
-                <div class="col-md-3 py-3">
-                    <div class="display-4 fw-bold text-primary">200+</div>
-                    <p>Sections Scheduled</p>
-                </div>
-                <div class="col-md-3 py-3">
-                    <div class="display-4 fw-bold text-primary">99%</div>
-                    <p>Conflict-Free</p>
-                </div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Features Section -->
     <section id="features" class="py-5">
@@ -78,7 +53,7 @@
                             </div>
                             <h5 class="card-title">Instructor Management</h5>
                             <p class="card-text">Easily manage teaching staff, assign courses, and track instructor availability.</p>
-                            <a href="/Instructors" class="btn btn-outline-primary rounded-pill mt-3">Manage Instructors</a>
+                            <a href="Home/ViewAllSchedulesByInstructor" class="btn btn-outline-primary rounded-pill mt-3">View Instructors Schedule</a>
                         </div>
                     </div>
                 </div>
@@ -91,7 +66,7 @@
                             </div>
                             <h5 class="card-title">Course Catalog</h5>
                             <p class="card-text">Comprehensive course management with prerequisites, requirements, and department mapping.</p>
-                            <a href="/Courses" class="btn btn-outline-primary rounded-pill mt-3">Browse Courses</a>
+                            <a href="Home/ViewByBatch" class="btn btn-outline-primary rounded-pill mt-3">View Batchs Schedule</a>
                         </div>
                     </div>
                 </div>
@@ -104,80 +79,13 @@
                             </div>
                             <h5 class="card-title">Smart Scheduling</h5>
                             <p class="card-text">AI-powered algorithm creates optimal schedules with zero conflicts.</p>
-                            <a href="/Home/Generate" class="btn btn-outline-primary rounded-pill mt-3">View Schedules</a>
+                            <a href="/Home/SelectBatch" class="btn btn-outline-primary rounded-pill mt-3">View Sections</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-    <!-- Call to Action -->
-    <section class="py-5 bg-light">
-        <div class="container text-center py-4">
-            <h2 class="fw-bold mb-4">Ready to Transform Your Scheduling Process?</h2>
-            <p class="lead mb-5">Join hundreds of universities using our platform to save time and eliminate scheduling headaches</p>
-            <a href="/Home/Generate" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
-                <i class="fas fa-rocket me-2"></i>Get Started Now
-            </a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white mt-auto">
-        <div class="container py-5">
-            <div class="row">
-                <div class="col-lg-4 mb-4 mb-lg-0">
-                    <h5>Class Scheduler Pro</h5>
-                    <p class="mt-3">The most advanced academic scheduling solution for universities and colleges.</p>
-                    <div class="mt-4">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin-in fa-lg"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled mt-3">
-                        <li class="mb-2"><a href="/" class="text-white-50 text-decoration-none">Home</a></li>
-                        <li class="mb-2"><a href="/Home/Generate" class="text-white-50 text-decoration-none">Schedules</a></li>
-                        <li class="mb-2"><a href="/Instructors" class="text-white-50 text-decoration-none">Instructors</a></li>
-                        <li class="mb-2"><a href="/Courses" class="text-white-50 text-decoration-none">Courses</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
-                    <h5>Resources</h5>
-                    <ul class="list-unstyled mt-3">
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Documentation</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">API</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Support</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4">
-                    <h5>Contact Us</h5>
-                    <ul class="list-unstyled mt-3">
-                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 University Ave, Campus Town</li>
-                        <li class="mb-2"><i class="fas fa-phone me-2"></i> (123) 456-7890</li>
-                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@classscheduler.edu</li>
-                    </ul>
-                </div>
-            </div>
-            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0">&copy; 2023 Class Scheduler Pro. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0">
-                        <a href="#" class="text-white-50 me-3 text-decoration-none">Privacy Policy</a>
-                        <a href="#" class="text-white-50 text-decoration-none">Terms of Service</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

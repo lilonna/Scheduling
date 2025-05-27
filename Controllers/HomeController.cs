@@ -295,7 +295,7 @@ namespace Scheduling.Controllers
                 .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Room)
                 .ToListAsync();
 
-            return View(schedules); // this will go to Views/YourControllerName/Generated.cshtml
+            return View(schedules); 
         }
 
         [HttpPost]
@@ -323,7 +323,7 @@ public async Task<IActionResult> Regenerate()
 
         public IActionResult SelectBatch()
         {
-            var batches = _context.Batchs.ToList(); // or include sections if needed
+            var batches = _context.Batchs.ToList(); 
             return View(batches);
         }
         public IActionResult ViewSectionByBatch(int id)

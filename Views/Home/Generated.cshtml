@@ -7,16 +7,16 @@
     {
         if (DateTime.TryParse(dateTimeString, out var dateTime))
         {
-            return dateTime.ToString("hh:mm tt"); 
+            return dateTime.ToString("hh:mm tt");
         }
-        return dateTimeString; 
+        return dateTimeString;
     }
 }
 
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-12">
-            <h2 class="text-center display-4 mb-4" style="color: #2c3e50;">Generated Schedule</h2>
+            <h2 class="text-center display-4 mb-4 text-dark">Generated Schedule</h2>
 
             @if (ViewBag.SuccessMessage != null)
             {
@@ -60,14 +60,11 @@
     {
         <div class="row">
             <div class="col-md-12">
-                <div class="card shadow-sm" style="border-color: #e0e0e0;">
-                    <div class="card-header" style="background-color: #5d9cec; color: white;">
-                        <h4 class="mb-0">Schedule Details</h4>
-                    </div>
+                <div class="card shadow-sm border-light">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0" style="border-color: #e0e0e0;">
-                                <thead style="background-color: #f5f7fa; color: #5d9cec;">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light text-primary">
                                     <tr>
                                         <th scope="col" class="text-center">Course Name</th>
                                         <th scope="col" class="text-center">Instructor</th>
@@ -80,12 +77,12 @@
                                 <tbody>
                                     @foreach (var schedule in Model)
                                     {
-                                        <tr style="border-color: #e0e0e0;">
+                                        <tr>
                                             <td class="align-middle">@schedule.Allocation.Course.Name</td>
                                             <td class="align-middle">@schedule.Allocation.Instructor.FullName</td>
                                             <td class="align-middle text-center">@schedule.Allocation.Section.Name</td>
                                             <td class="align-middle text-center">@schedule.TimeSlot.DaysOfWeek.Name</td>
-                                            <td class="fw-semibold">@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                                            <td class="font-weight-bold">@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
                                             <td class="align-middle text-center">@(schedule.Room?.RoomNumber ?? schedule.Allocation.Section.Room?.RoomNumber ?? "Not Assigned")</td>
                                         </tr>
                                     }
@@ -101,7 +98,7 @@
     {
         <div class="row">
             <div class="col-md-12">
-                <div class="alert alert-warning text-center py-4" style="background-color: #f5f7fa; border-color: #e0e0e0; color: #5d9cec;">
+                <div class="alert alert-warning text-center py-4 bg-light border-light text-primary">
                     <h4 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>No Schedule Generated</h4>
                     <p class="mb-0">There is no schedule available to display.</p>
                 </div>
@@ -113,12 +110,12 @@
     {
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="card" style="border-color: #a0d468;">
-                    <div class="card-header" style="background-color: #a0d468; color: white;">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
                         <h4 class="mb-0">Generation Log</h4>
                     </div>
                     <div class="card-body">
-                        <pre class="mb-0 p-3 rounded" style="white-space: pre-wrap; word-wrap: break-word; background-color: #f5f7fa; color: #656d78;">@ViewBag.TrackerLog</pre>
+                        <pre class="mb-0 p-3 rounded bg-light text-dark">@ViewBag.TrackerLog</pre>
                     </div>
                 </div>
             </div>
@@ -129,15 +126,15 @@
     {
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="card" style="border-color: #ffce54;">
-                    <div class="card-header" style="background-color: #ffce54; color: #a37d12;">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
                         <h4 class="mb-0"><i class="fas fa-exclamation-circle mr-2"></i>Duplicate Entries Detected</h4>
                     </div>
                     <div class="card-body">
                         <ul class="list-group">
                             @foreach (var log in (List<string>)ViewBag.DuplicateLogs)
                             {
-                                <li class="list-group-item" style="background-color: #f5f7fa; color: #a37d12; border-color: #e0e0e0;">@log</li>
+                                <li class="list-group-item bg-light text-warning border-light">@log</li>
                             }
                         </ul>
                     </div>
