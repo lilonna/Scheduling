@@ -97,19 +97,24 @@
     }
 </div>
 
-@* @section Scripts {
-    <script>
-        // Enable all Bootstrap popovers
-        document.addEventListener('DOMContentLoaded', function () {
-            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-                return new bootstrap.Popover(popoverTriggerEl, {
-                    container: 'body',
-                    html: true
-                });
-            });
-        });
-    </script> *@
+<!-- Feedback Modal -->
+<div class="modal fade" id="swapFeedbackModal" tabindex="-1" aria-labelledby="swapFeedbackLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="swapFeedbackLabel">Swap Failed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="swapFeedbackBody">
+                <!-- Error content will be injected here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -153,19 +158,29 @@
                                 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
                             }
                         })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    const modalBody = document.getElementById("swapFeedbackBody");
+                                    modalBody.innerHTML = data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
 
-                        .then(res => {
-                            if (res.redirected) {
-                                window.location.href = res.url;
-                            } else {
-                                alert("Swap failed.");
-                            }
-                        })
-                        .catch(err => alert("Error: " + err))
-                        .finally(() => {
-                            selectedCells.forEach(c => c.classList.remove('table-info'));
-                            selectedCells = [];
-                        });
+                                    const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
+                                    modal.show();
+                                }
+                            })
+                            .catch(err => {
+                                const modalBody = document.getElementById("swapFeedbackBody");
+                                modalBody.innerHTML = `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
+                                const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
+                                modal.show();
+                            })
+                            .finally(() => {
+                                selectedCells.forEach(c => c.classList.remove('table-info'));
+                                selectedCells = [];
+                            });
+
                     }
                 });
             });

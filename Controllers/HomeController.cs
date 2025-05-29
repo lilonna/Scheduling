@@ -500,17 +500,20 @@ public async Task<IActionResult> Regenerate()
                         .ThenInclude(t => t.DaysOfWeek)
                     .ToListAsync();
 
+                var errors = new List<string>();
+
                 if (conflict1 != null)
                 {
-                    ModelState.AddModelError("", $"Instructor {schedule1.Allocation.Instructor.FullName} has already class on {conflict1.TimeSlot.DaysOfWeek.Name} from {conflict1.TimeSlot.From:hh\\:mm} to {conflict1.TimeSlot.To:hh\\:mm}.");
+                    errors.Add($"Instructor {schedule1.Allocation.Instructor.FullName} has already class on {conflict1.TimeSlot.DaysOfWeek.Name} from {conflict1.TimeSlot.From:hh\\:mm} to {conflict1.TimeSlot.To:hh\\:mm}.");
                 }
 
                 if (conflict2 != null)
                 {
-                    ModelState.AddModelError("", $"Instructor {schedule2.Allocation.Instructor.FullName} has already class on {conflict2.TimeSlot.DaysOfWeek.Name} from {conflict2.TimeSlot.From:hh\\:mm} to {conflict2.TimeSlot.To:hh\\:mm}.");
+                    errors.Add($"Instructor {schedule2.Allocation.Instructor.FullName} has already class on {conflict2.TimeSlot.DaysOfWeek.Name} from {conflict2.TimeSlot.From:hh\\:mm} to {conflict2.TimeSlot.To:hh\\:mm}.");
                 }
 
-                return View("SwapSchedules", schedules);
+                return Json(new { success = false, errors });
+
             }
 
             // Swap AllocationId
