@@ -66,7 +66,8 @@
                                             s.TimeSlot.DaysOfWeek.Id == day.Id);
 
                                             <td class="schedule-cell text-center"
-                                                data-schedule-id="@matchedSchedule?.Id">
+                                                data-schedule-id="@matchedSchedule?.Id"
+                                                data-section-id="@sectionGroup.Section.Id">
                                                 @if (matchedSchedule != null)
                                                 {
                                                     <a tabindex="0"
@@ -96,6 +97,10 @@
         </div>
     }
 </div>
+<div id="swapHint" class="text-info fst-italic mt-2" style="display:none;">
+    Schedule selected. Now select another from the same section to swap.
+</div>
+
 
 <!-- Feedback Modal -->
 <div class="modal fade" id="swapFeedbackModal" tabindex="-1" aria-labelledby="swapFeedbackLabel" aria-hidden="true">
@@ -114,11 +119,30 @@
         </div>
     </div>
 </div>
+<!-- Confirm Swap Modal -->
+<div class="modal fade" id="confirmSwapModal" tabindex="-1" aria-labelledby="confirmSwapLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-primary">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmSwapLabel">Confirm Swap</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to swap the selected classes?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmSwapBtn" type="button" class="btn btn-primary">Yes, Swap</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    @section Scripts {
+
+
+@section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Bootstrap popovers
             var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
             popoverTriggerList.map(function (popoverTriggerEl) {
                 return new bootstrap.Popover(popoverTriggerEl, {
@@ -126,66 +150,105 @@
                     html: true
                 });
             });
-            
-            // Swap logic
+
             let selectedCells = [];
+            let scheduleIds = [];
 
             document.querySelectorAll('.schedule-cell').forEach(cell => {
+                const swapHint = document.getElementById('swapHint');
                 cell.addEventListener('click', function () {
                     const scheduleId = this.dataset.scheduleId;
+                    const sectionId = this.dataset.sectionId;
 
                     if (!scheduleId) return;
 
+                    // Toggle highlight
                     this.classList.toggle('table-info');
 
+                    // Track selection
                     if (!selectedCells.includes(this)) {
                         selectedCells.push(this);
+                    } else {
+                        // if cell deselected, remove from selectedCells array
+                        selectedCells = selectedCells.filter(c => c !== this);
+                    }
+                    // Show or hide hint based on selection count
+                    if (selectedCells.length === 1) {
+                        swapHint.style.display = 'block';
+                    } else {
+                        swapHint.style.display = 'none';
                     }
 
+                    // Once 2 cells are selected
                     if (selectedCells.length === 2) {
-                        const id1 = selectedCells[0].dataset.scheduleId;
-                        const id2 = selectedCells[1].dataset.scheduleId;
+                        const sectionId1 = selectedCells[0].dataset.sectionId;
+                        const sectionId2 = selectedCells[1].dataset.sectionId;
+                        swapHint.style.display = 'none';
 
-                        if (!confirm("Swap these two classes?")) {
+                        // If not same section, cancel
+                        if (sectionId1 !== sectionId2) {
+                            // Unhighlight and reset
                             selectedCells.forEach(c => c.classList.remove('table-info'));
                             selectedCells = [];
+                            scheduleIds = [];
+
+                            // Optional: show a tooltip or toast
+                            alert("You can only swap schedules within the same section.");
                             return;
                         }
+                     
 
-                        fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
-                            method: 'POST',
-                            headers: {
-                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                            }
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.success) {
-                                    location.reload();
-                                } else {
-                                    const modalBody = document.getElementById("swapFeedbackBody");
-                                    modalBody.innerHTML = data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
+                        // Continue with swap
+                        scheduleIds = [
+                            selectedCells[0].dataset.scheduleId,
+                            selectedCells[1].dataset.scheduleId
+                        ];
 
-                                    const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
-                                    modal.show();
-                                }
-                            })
-                            .catch(err => {
-                                const modalBody = document.getElementById("swapFeedbackBody");
-                                modalBody.innerHTML = `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
-                                const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
-                                modal.show();
-                            })
-                            .finally(() => {
-                                selectedCells.forEach(c => c.classList.remove('table-info'));
-                                selectedCells = [];
-                            });
-
+                        const confirmModal = new bootstrap.Modal(document.getElementById('confirmSwapModal'));
+                        confirmModal.show();
+                    }
+                    // if no cells selected, hide hint
+                    if (selectedCells.length === 0) {
+                        swapHint.style.display = 'none';
                     }
                 });
             });
+
+
+            document.getElementById('confirmSwapBtn').addEventListener('click', function () {
+                const [id1, id2] = scheduleIds;
+
+                fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            const modalBody = document.getElementById("swapFeedbackBody");
+                            modalBody.innerHTML = data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
+                            const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
+                            modal.show();
+                        }
+                    })
+                    .catch(err => {
+                        const modalBody = document.getElementById("swapFeedbackBody");
+                        modalBody.innerHTML = `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
+                        const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
+                        modal.show();
+                    })
+                    .finally(() => {
+                        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmSwapModal'));
+                        confirmModal.hide();
+                        selectedCells.forEach(c => c.classList.remove('table-info'));
+                        selectedCells = [];
+                        scheduleIds = [];
+                    });
+            });
         });
     </script>
-}
-
 }

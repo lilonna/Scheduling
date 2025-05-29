@@ -205,7 +205,7 @@ namespace Scheduling.Controllers
                     RoomId = assignedRoomId,
                     Ssid = departmentToSSID[allocation.Section.DepartmentId]
                 });
-                roomSlotMap[((int)assignedRoomId, timeSlotId)] = true;
+                roomSlotMap[((int) assignedRoomId, timeSlotId)] = true;
 
 
                 instructorSlotMap[(instructorId, timeSlotId)] = true;
