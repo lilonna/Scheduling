@@ -65,7 +65,8 @@
                                             s.TimeSlot.To == time.To &&
                                             s.TimeSlot.DaysOfWeek.Id == day.Id);
 
-                                            <td class="text-center">
+                                            <td class="schedule-cell text-center"
+                                                data-schedule-id="@matchedSchedule?.Id">
                                                 @if (matchedSchedule != null)
                                                 {
                                                     <a tabindex="0"
@@ -83,6 +84,7 @@
                                                     <span class="text-muted fst-italic">-</span>
                                                 }
                                             </td>
+
                                         }
                                     </tr>
                                 }
@@ -95,7 +97,7 @@
     }
 </div>
 
-@section Scripts {
+@* @section Scripts {
     <script>
         // Enable all Bootstrap popovers
         document.addEventListener('DOMContentLoaded', function () {
@@ -107,5 +109,69 @@
                 });
             });
         });
+    </script> *@
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Bootstrap popovers
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl, {
+                    container: 'body',
+                    html: true
+                });
+            });
+            
+            // Swap logic
+            let selectedCells = [];
+
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.addEventListener('click', function () {
+                    const scheduleId = this.dataset.scheduleId;
+
+                    if (!scheduleId) return;
+
+                    this.classList.toggle('table-info');
+
+                    if (!selectedCells.includes(this)) {
+                        selectedCells.push(this);
+                    }
+
+                    if (selectedCells.length === 2) {
+                        const id1 = selectedCells[0].dataset.scheduleId;
+                        const id2 = selectedCells[1].dataset.scheduleId;
+
+                        if (!confirm("Swap these two classes?")) {
+                            selectedCells.forEach(c => c.classList.remove('table-info'));
+                            selectedCells = [];
+                            return;
+                        }
+
+                        fetch('/HomeController/SwapSchedules', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            },
+                            body: JSON.stringify({ scheduleId1: id1, scheduleId2: id2 })
+                        })
+                        .then(res => {
+                            if (res.redirected) {
+                                window.location.href = res.url;
+                            } else {
+                                alert("Swap failed.");
+                            }
+                        })
+                        .catch(err => alert("Error: " + err))
+                        .finally(() => {
+                            selectedCells.forEach(c => c.classList.remove('table-info'));
+                            selectedCells = [];
+                        });
+                    }
+                });
+            });
+        });
     </script>
+}
+
 }

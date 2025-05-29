@@ -443,7 +443,7 @@ public async Task<IActionResult> Regenerate()
         }
 
         [HttpPost]
-        public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
+        public async Task<IActionResult> SwapSchedules([FromBody] SwapRequest request)
         {
             var schedule1 = await _context.Schedules
                 .Include(s => s.Allocation)
@@ -526,7 +526,11 @@ public async Task<IActionResult> Regenerate()
             return RedirectToAction("ViewAllSchedulesByInstructor");
         }
 
-
+        public class SwapRequest
+        {
+            public int ScheduleId1 { get; set; }
+            public int ScheduleId2 { get; set; }
+        }
         public IActionResult ViewBySection()
         {
             var schedules = _context.Schedules
