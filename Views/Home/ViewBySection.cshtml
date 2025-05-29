@@ -147,14 +147,13 @@
                             return;
                         }
 
-                        fetch('/HomeController/SwapSchedules', {
+                        fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
                                 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                            },
-                            body: JSON.stringify({ scheduleId1: id1, scheduleId2: id2 })
+                            }
                         })
+
                         .then(res => {
                             if (res.redirected) {
                                 window.location.href = res.url;

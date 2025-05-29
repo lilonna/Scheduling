@@ -442,8 +442,9 @@ public async Task<IActionResult> Regenerate()
             return Json(schedules);
         }
 
+     
         [HttpPost]
-        public async Task<IActionResult> SwapSchedules([FromBody] SwapRequest request)
+        public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
             var schedule1 = await _context.Schedules
                 .Include(s => s.Allocation)
@@ -470,24 +471,20 @@ public async Task<IActionResult> Regenerate()
             var timeSlot1 = schedule1.TimeSlot;
             var timeSlot2 = schedule2.TimeSlot;
 
-            // Check for conflicts for instructor1 with timeSlot2
             var conflict1 = await _context.Schedules
                 .Include(s => s.TimeSlot)
                     .ThenInclude(t => t.DaysOfWeek)
                 .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
                 .Where(s => s.Allocation.InstructorId == instructor1Id && s.Id != schedule1.Id)
                 .FirstOrDefaultAsync(s =>
                     s.TimeSlot.DaysOfWeekId == timeSlot2.DaysOfWeekId &&
                     s.TimeSlot.From < timeSlot2.To &&
                     s.TimeSlot.To > timeSlot2.From);
 
-            // Check for conflicts for instructor2 with timeSlot1
             var conflict2 = await _context.Schedules
                 .Include(s => s.TimeSlot)
                     .ThenInclude(t => t.DaysOfWeek)
                 .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
                 .Where(s => s.Allocation.InstructorId == instructor2Id && s.Id != schedule2.Id)
                 .FirstOrDefaultAsync(s =>
                     s.TimeSlot.DaysOfWeekId == timeSlot1.DaysOfWeekId &&
@@ -510,13 +507,13 @@ public async Task<IActionResult> Regenerate()
 
                 if (conflict2 != null)
                 {
-                    ModelState.AddModelError("", $"Instructor {schedule2.Allocation.Instructor.FullName} has already class on  {conflict2.TimeSlot.DaysOfWeek.Name} from {conflict2.TimeSlot.From:hh\\:mm} to {conflict2.TimeSlot.To:hh\\:mm}.");
+                    ModelState.AddModelError("", $"Instructor {schedule2.Allocation.Instructor.FullName} has already class on {conflict2.TimeSlot.DaysOfWeek.Name} from {conflict2.TimeSlot.From:hh\\:mm} to {conflict2.TimeSlot.To:hh\\:mm}.");
                 }
 
                 return View("SwapSchedules", schedules);
             }
 
-            // Swap the AllocationId between the two schedules
+            // Swap AllocationId
             var tempAllocationId = schedule1.AllocationId;
             schedule1.AllocationId = schedule2.AllocationId;
             schedule2.AllocationId = tempAllocationId;
@@ -526,11 +523,6 @@ public async Task<IActionResult> Regenerate()
             return RedirectToAction("ViewAllSchedulesByInstructor");
         }
 
-        public class SwapRequest
-        {
-            public int ScheduleId1 { get; set; }
-            public int ScheduleId2 { get; set; }
-        }
         public IActionResult ViewBySection()
         {
             var schedules = _context.Schedules
