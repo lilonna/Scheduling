@@ -7,6 +7,15 @@
 <div class="container mt-4">
     <h1 class="text-center mb-4">Schedules by Section</h1>
 
+    <div class="form-check form-switch mb-4">
+        <input class="form-check-input" type="checkbox" id="swapModeToggle">
+        <label class="form-check-label" for="swapModeToggle">Enable Swap Mode</label>
+    </div>
+
+    <div id="swapHint" class="text-info fst-italic mb-4" style="display:none;">
+        Swap Mode is ON. Select two schedules within the same section to swap.
+    </div>
+
     @foreach (var batch in Model)
     {
         <div class="mb-5">
@@ -57,7 +66,6 @@
                                 {
                                     <tr>
                                         <td class="fw-semibold">@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
-
                                         @foreach (var day in days)
                                         {
                                             var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
@@ -70,22 +78,27 @@
                                                 data-section-id="@sectionGroup.Section.Id">
                                                 @if (matchedSchedule != null)
                                                 {
-                                                    <a tabindex="0"
-                                                       class="text-decoration-none text-primary"
-                                                       role="button"
-                                                       data-bs-toggle="popover"
-                                                       data-bs-trigger="hover focus"
-                                                       title="Instructor"
-                                                       data-bs-content="@matchedSchedule.Allocation.Instructor.FullName">
-                                                        @matchedSchedule.Allocation.Course.Name
-                                                    </a>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted fst-italic">-</span>
-                                                }
-                                            </td>
+                                                    <div class="schedule-content">
+                                                        <a tabindex="0"
+                                                           class="text-decoration-none text-primary"
+                                                           role="button"
+                                                           data-bs-toggle="popover"
+                                                           data-bs-trigger="hover focus"
+                                                           title="Instructor"
+                                                           data-bs-content="@matchedSchedule.Allocation.Instructor.FullName">
+                                                            @matchedSchedule.Allocation.Course.Name
+                                                        </a>
+                                                    </div>
+                                                    <div class="swap-switch" style="display:none;">
+                                                        <div class="form-check form-switch d-flex justify-content-center mt-2">
+                                                            <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
+                                                            <label class="form-check-label ms-2" for="swap-@matchedSchedule.Id">Swap</label>
+                                                        </div>
+                                                    </div>
 
+                                                }
+
+                                            </td>
                                         }
                                     </tr>
                                 }
@@ -97,10 +110,6 @@
         </div>
     }
 </div>
-<div id="swapHint" class="text-info fst-italic mt-2" style="display:none;">
-    Schedule selected. Now select another from the same section to swap.
-</div>
-
 
 <!-- Feedback Modal -->
 <div class="modal fade" id="swapFeedbackModal" tabindex="-1" aria-labelledby="swapFeedbackLabel" aria-hidden="true">
@@ -119,6 +128,7 @@
         </div>
     </div>
 </div>
+
 <!-- Confirm Swap Modal -->
 <div class="modal fade" id="confirmSwapModal" tabindex="-1" aria-labelledby="confirmSwapLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -138,117 +148,97 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Activate popovers
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+            new bootstrap.Popover(el, { container: 'body', html: true });
+        });
+
+        let selectedCells = [];
+        let scheduleIds = [];
+
+        document.querySelectorAll('.schedule-cell').forEach(cell => {
+            cell.addEventListener('click', function () {
+                const scheduleId = this.dataset.scheduleId;
+                const sectionId = this.dataset.sectionId;
+
+                if (!scheduleId) return;
+
+                const switchDiv = this.querySelector('.swap-switch');
+
+                // Toggle visibility of switch
+                if (selectedCells.length < 2) {
+                    document.querySelectorAll('.swap-switch').forEach(s => s.style.display = 'none');
+                }
+
+                if (!selectedCells.includes(this)) {
+                    switchDiv.style.display = 'block';
+                }
+
+                // Track selection without removing highlight if already selected
+                if (!selectedCells.includes(this)) {
+                    selectedCells.push(this);
+                    this.classList.add('table-info');
+                    switchDiv.style.display = 'block';
+                } else {
+                    selectedCells = selectedCells.filter(c => c !== this);
+                    this.classList.remove('table-info');
+                    switchDiv.style.display = 'none';
+                }
 
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            popoverTriggerList.map(function (popoverTriggerEl) {
-                return new bootstrap.Popover(popoverTriggerEl, {
-                    container: 'body',
-                    html: true
-                });
-            });
-
-            let selectedCells = [];
-            let scheduleIds = [];
-
-            document.querySelectorAll('.schedule-cell').forEach(cell => {
-                const swapHint = document.getElementById('swapHint');
-                cell.addEventListener('click', function () {
-                    const scheduleId = this.dataset.scheduleId;
-                    const sectionId = this.dataset.sectionId;
-
-                    if (!scheduleId) return;
-
-                    // Toggle highlight
-                    this.classList.toggle('table-info');
-
-                    // Track selection
-                    if (!selectedCells.includes(this)) {
-                        selectedCells.push(this);
-                    } else {
-                        // if cell deselected, remove from selectedCells array
-                        selectedCells = selectedCells.filter(c => c !== this);
-                    }
-                    // Show or hide hint based on selection count
-                    if (selectedCells.length === 1) {
-                        swapHint.style.display = 'block';
-                    } else {
-                        swapHint.style.display = 'none';
-                    }
-
-                    // Once 2 cells are selected
-                    if (selectedCells.length === 2) {
-                        const sectionId1 = selectedCells[0].dataset.sectionId;
-                        const sectionId2 = selectedCells[1].dataset.sectionId;
-                        swapHint.style.display = 'none';
-
-                        // If not same section, cancel
-                        if (sectionId1 !== sectionId2) {
-                            // Unhighlight and reset
-                            selectedCells.forEach(c => c.classList.remove('table-info'));
-                            selectedCells = [];
-                            scheduleIds = [];
-
-                            // Optional: show a tooltip or toast
-                            alert("You can only swap schedules within the same section.");
-                            return;
-                        }
-                     
-
-                        // Continue with swap
-                        scheduleIds = [
-                            selectedCells[0].dataset.scheduleId,
-                            selectedCells[1].dataset.scheduleId
-                        ];
-
-                        const confirmModal = new bootstrap.Modal(document.getElementById('confirmSwapModal'));
-                        confirmModal.show();
-                    }
-                    // if no cells selected, hide hint
-                    if (selectedCells.length === 0) {
-                        swapHint.style.display = 'none';
-                    }
-                });
-            });
-
-
-            document.getElementById('confirmSwapBtn').addEventListener('click', function () {
-                const [id1, id2] = scheduleIds;
-
-                fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    }
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            const modalBody = document.getElementById("swapFeedbackBody");
-                            modalBody.innerHTML = data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
-                            const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
-                            modal.show();
-                        }
-                    })
-                    .catch(err => {
-                        const modalBody = document.getElementById("swapFeedbackBody");
-                        modalBody.innerHTML = `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
-                        const modal = new bootstrap.Modal(document.getElementById("swapFeedbackModal"));
-                        modal.show();
-                    })
-                    .finally(() => {
-                        const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmSwapModal'));
-                        confirmModal.hide();
-                        selectedCells.forEach(c => c.classList.remove('table-info'));
+                if (selectedCells.length === 2) {
+                    const [c1, c2] = selectedCells;
+                    if (c1.dataset.sectionId !== c2.dataset.sectionId) {
+                        alert("You can only swap schedules within the same section.");
+                        selectedCells.forEach(c => {
+                            c.classList.remove('table-info');
+                            c.querySelector('.swap-switch').style.display = 'none';
+                        });
                         selectedCells = [];
-                        scheduleIds = [];
-                    });
+                        return;
+                    }
+
+                    scheduleIds = [c1.dataset.scheduleId, c2.dataset.scheduleId];
+                    new bootstrap.Modal(document.getElementById('confirmSwapModal')).show();
+                }
             });
         });
-    </script>
-}
+
+        document.getElementById('confirmSwapBtn').addEventListener('click', function () {
+            const [id1, id2] = scheduleIds;
+            fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        document.getElementById("swapFeedbackBody").innerHTML =
+                            data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
+                        new bootstrap.Modal(document.getElementById("swapFeedbackModal")).show();
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("swapFeedbackBody").innerHTML =
+                        `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
+                    new bootstrap.Modal(document.getElementById("swapFeedbackModal")).show();
+                })
+                .finally(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('confirmSwapModal')).hide();
+                    selectedCells.forEach(c => {
+                        c.classList.remove('table-info');
+                        c.querySelector('.swap-switch').style.display = 'none';
+                    });
+                    selectedCells = [];
+                    scheduleIds = [];
+                });
+        });
+    });
+</script>
+
