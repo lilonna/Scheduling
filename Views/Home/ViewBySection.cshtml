@@ -2,7 +2,10 @@
 
 @{
     ViewData["Title"] = "Schedules by Section";
+
 }
+
+
 
 <div class="container mt-4">
     <h1 class="text-center mb-4">Schedules by Section</h1>
@@ -78,23 +81,23 @@
                                                 data-section-id="@sectionGroup.Section.Id">
                                                 @if (matchedSchedule != null)
                                                 {
-                                                    <div class="schedule-content">
+                                                    <div class="schedule-content position-relative">
                                                         <a tabindex="0"
                                                            class="text-decoration-none text-primary"
                                                            role="button"
                                                            data-bs-toggle="popover"
-                                                           data-bs-trigger="hover focus"
                                                            title="Instructor"
                                                            data-bs-content="@matchedSchedule.Allocation.Instructor.FullName">
                                                             @matchedSchedule.Allocation.Course.Name
                                                         </a>
-                                                    </div>
-                                                    <div class="swap-switch" style="display:none;">
-                                                        <div class="form-check form-switch d-flex justify-content-center mt-2">
-                                                            <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
-                                                            <label class="form-check-label ms-2" for="swap-@matchedSchedule.Id">Swap</label>
+                                                        <div class="swap-switch position-absolute top-100 start-50 translate-middle-x mt-1" style="display:none;">
+                                                            <div class="form-check form-switch">
+                                                                <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
+                                                                <label class="form-check-label ms-2" for="swap-@matchedSchedule.Id">Swap</label>
+                                                            </div>
                                                         </div>
                                                     </div>
+
 
                                                 }
 
@@ -152,7 +155,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Activate popovers
         document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-            new bootstrap.Popover(el, { container: 'body', html: true });
+            new bootstrap.Popover(el);
         });
 
         let selectedCells = [];
@@ -170,20 +173,30 @@
 
         document.querySelectorAll('.schedule-cell').forEach(cell => {
             cell.addEventListener('click', function () {
+                const isSwapMode = document.getElementById('swapModeToggle').checked;
+                if (!isSwapMode) return;
+
                 const scheduleId = this.dataset.scheduleId;
                 const sectionId = this.dataset.sectionId;
                 if (!scheduleId) return;
+                if (selectedCells.includes(this)) {
+                    this.classList.remove('table-info');
+                    const switchDiv = this.querySelector('.swap-switch');
+                    if (switchDiv) switchDiv.style.display = 'none';
+                    selectedCells = selectedCells.filter(c => c !== this);
+                    return;
+                }
 
-                if (selectedCells.includes(this)) return; // Prevent double-select
-
-                // First click: show highlight and swap switch
                 this.classList.add('table-info');
+                const switchDiv = this.querySelector('.swap-switch');
+                if (switchDiv) switchDiv.style.display = 'block';
+                selectedCells.push(this);
+
                 const switchDiv = this.querySelector('.swap-switch');
                 if (switchDiv) switchDiv.style.display = 'block';
 
                 selectedCells.push(this);
 
-                // Second click: trigger swap
                 if (selectedCells.length === 2) {
                     const [c1, c2] = selectedCells;
                     if (c1.dataset.sectionId !== c2.dataset.sectionId) {
@@ -196,11 +209,12 @@
                     new bootstrap.Modal(document.getElementById('confirmSwapModal')).show();
                 }
             });
+
         });
 
         document.getElementById('confirmSwapBtn').addEventListener('click', function () {
             const [id1, id2] = scheduleIds;
-            fetch(/Home/SwapSchedules ? scheduleId1 = ${ id1 } & scheduleId2=${ id2 }, {
+            fetch(`/Home/SwapSchedules?scheduleId1=${id1}&scheduleId2=${id2}`, {
                 method: 'POST',
                 headers: {
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
@@ -212,24 +226,18 @@
                         location.reload();
                     } else {
                         document.getElementById("swapFeedbackBody").innerHTML =
-                            data.errors.map(e => <div class="text-danger mb-2">• ${e}</div>).join("");
+                            data.errors.map(e => `<div class="text-danger mb-2">• ${e}</div>`).join("");
                         new bootstrap.Modal(document.getElementById("swapFeedbackModal")).show();
                     }
                 })
                 .catch(err => {
                     document.getElementById("swapFeedbackBody").innerHTML =
-                        <div class="text-danger">An unexpected error occurred: ${err}</div>;
+                        `<div class="text-danger">An unexpected error occurred: ${err}</div>`;
                     new bootstrap.Modal(document.getElementById("swapFeedbackModal")).show();
                 })
                 .finally(() => {
                     bootstrap.Modal.getInstance(document.getElementById('confirmSwapModal')).hide();
                     resetSelection();
                 });
-        });
-        const confirmModalEl = document.getElementById('confirmSwapModal');
-        confirmModalEl.addEventListener('hidden.bs.modal', function () {
-            resetSelection();
-        });
-
     });
 </script>

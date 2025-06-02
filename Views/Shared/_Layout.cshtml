@@ -5,18 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Scheduling</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Scheduling.styles.css" asp-append-version="true" />
+    <style>
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+        }
+
+        main {
+            margin-top: 56px;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3 fixed-top">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Scheduling</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Scheduling</a>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
@@ -30,10 +41,57 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
+                <div class="position-sticky pt-3">
+                    <div class="text-center text-white mb-4">
+                        <h4>Class Scheduler</h4>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a href="/Home" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "active bg-primary text-white" : "text-white")">
+                                <i class="fas fa-home me-2"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Home/Generate" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Generate" ? "active bg-primary text-white" : "text-white")">
+                                <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form asp-action="GenerateSectionRoomAssignments" method="post" class="nav-link text-white">
+                                <button type="submit" class="btn btn-link text-white text-decoration-none p-0">
+                                    <i class="fas fa-door-open me-2"></i>Generate Room Assignments
+                                </button>
+                            </form>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Home/ViewAllSchedulesByInstructor" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ViewAllSchedulesByInstructor" ? "active bg-primary text-white" : "text-white")">
+                                <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Home/ViewByBatch" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ViewByBatch" ? "active bg-primary text-white" : "text-white")">
+                                <i class="fas fa-users me-2"></i>Batch Schedules
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Home/SelectBatch" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "SelectBatch" ? "active bg-primary text-white" : "text-white")">
+                                <i class="fas fa-list me-2"></i>View Sections
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">

@@ -2,91 +2,64 @@
     ViewData["Title"] = "Home";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Class Scheduler</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="d-flex flex-column min-vh-100">
-    <!-- Hero Section -->
-    <section class="bg-primary bg-gradient text-white py-5 position-relative overflow-hidden">
-        <div class="container position-relative">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 text-center">
-                    <h1 class="display-4 mb-4 fw-bold">Welcome to Class Scheduling</h1>
-                 
-                    <a href="/Home/Generate" class="btn btn-light btn-lg me-3">
-                        <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
-                    </a>
-
-                    <form asp-action="GenerateSectionRoomAssignments" method="post" class="container my-4">
-                        <button type="submit" class="btn btn-light btn-lg me-3">Generate Room Assignments</button>
-                    </form>
-                </div>
+<!-- Hero Section -->
+<section class="bg-primary bg-gradient text-white py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-4 mb-4 fw-bold">Welcome to Class Scheduling</h1>
+                <p class="lead mb-5">Efficiently manage and generate academic schedules with our powerful system</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h2 class="fw-bold mb-3">Powerful Features</h2>
+                <p class="lead text-muted">Everything you need to create the perfect academic schedule</p>
+            </div>
+        </div>
 
-
-
-    <!-- Features Section -->
-    <section id="features" class="py-5">
-        <div class="container">
-            <div class="row justify-content-center mb-5">
-                <div class="col-lg-8 text-center">
-                    <h2 class="fw-bold mb-3">Powerful Features</h2>
-                    <p class="lead text-muted">Everything you need to create the perfect academic schedule</p>
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="fs-1 mb-3 text-primary">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h5 class="card-title">Instructor Management</h5>
+                        <p class="card-text">Easily manage teaching staff, assign courses, and track instructor availability.</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="row mt-5">
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow border-0">
-                        <div class="card-body text-center p-4">
-                            <div class="fs-1 mb-3 text-primary">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </div>
-                            <h5 class="card-title">Instructor Management</h5>
-                            <p class="card-text">Easily manage teaching staff, assign courses, and track instructor availability.</p>
-                            <a href="Home/ViewAllSchedulesByInstructor" class="btn btn-outline-primary rounded-pill mt-3">View Instructors Schedule</a>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="fs-1 mb-3 text-primary">
+                            <i class="fas fa-book-open"></i>
                         </div>
+                        <h5 class="card-title">Course Catalog</h5>
+                        <p class="card-text">Comprehensive course management with prerequisites, requirements, and department mapping.</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow border-0">
-                        <div class="card-body text-center p-4">
-                            <div class="fs-1 mb-3 text-primary">
-                                <i class="fas fa-book-open"></i>
-                            </div>
-                            <h5 class="card-title">Course Catalog</h5>
-                            <p class="card-text">Comprehensive course management with prerequisites, requirements, and department mapping.</p>
-                            <a href="Home/ViewByBatch" class="btn btn-outline-primary rounded-pill mt-3">View Batchs Schedule</a>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="fs-1 mb-3 text-primary">
+                            <i class="fas fa-calendar-check"></i>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow border-0">
-                        <div class="card-body text-center p-4">
-                            <div class="fs-1 mb-3 text-primary">
-                                <i class="fas fa-calendar-check"></i>
-                            </div>
-                            <h5 class="card-title">Smart Scheduling</h5>
-                            <p class="card-text">AI-powered algorithm creates optimal schedules with zero conflicts.</p>
-                            <a href="/Home/SelectBatch" class="btn btn-outline-primary rounded-pill mt-3">View Sections</a>
-                        </div>
+                        <h5 class="card-title">Smart Scheduling</h5>
+                        <p class="card-text">AI-powered algorithm creates optimal schedules with zero conflicts.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    </div>
+</section>
