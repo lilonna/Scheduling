@@ -145,7 +145,7 @@ namespace Scheduling.Controllers
                     score *= creditHour;
                 }
 
-                // Bonus for back-to-back same-course same-instructor
+             
                 if (sameCourseGroup.Count > 1)
                 {
                     var sameDaySchedules = newSchedules
@@ -187,17 +187,17 @@ namespace Scheduling.Controllers
                 int? assignedRoomId = allocation.Section.RoomId;
                 if (assignedRoomId != null && roomSlotMap.ContainsKey(((int)assignedRoomId, timeSlotId)))
                 {
-                    // Find alternative room that is free
+                    
                     assignedRoomId = _context.Rooms
                         .AsNoTracking()
                         .ToList()
                         .FirstOrDefault(r => !roomSlotMap.ContainsKey((r.Id, timeSlotId)))?.Id;
 
                     if (assignedRoomId == null)
-                        return false; // no available room
+                        return false; 
                 }
 
-                // Assign and track
+                
                 newSchedules.Add(new Schedule
                 {
                     AllocationId = allocation.Id,
@@ -218,14 +218,11 @@ namespace Scheduling.Controllers
                     instructorDaySlots[(instructorId, day)] = new();
                 instructorDaySlots[(instructorId, day)].Add(ts);
 
-                return true;  // Successfully assigned
+                return true;  
             }
 
-            // If no slot was found, return false
             return false;
         }
-
-
         private async Task<List<Allocation>> GetAllocationsAsync()
         {
             return await _context.Allocations
@@ -265,24 +262,6 @@ namespace Scheduling.Controllers
             await _context.SaveChangesAsync();
         }
 
-        // Views for filtering by category
-        public IActionResult ViewByTimeSlot(int scheduleSettingId)
-        {
-            var categoryIds = _context.SstimeSlots
-                .Where(sst => sst.Ssid == scheduleSettingId)
-                .Select(sst => sst.CategoryId)
-                .ToList();
-
-            var schedules = _context.Schedules
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Section)
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(ts => ts.Category)
-                .Where(s => categoryIds.Contains(s.TimeSlot.CategoryId))
-                .ToList();
-
-            return View(schedules);
-        }
         [HttpGet]
         public async Task<IActionResult> Generated()
         {
@@ -297,31 +276,7 @@ namespace Scheduling.Controllers
 
             return View(schedules); 
         }
-
-        [HttpPost]
-public async Task<IActionResult> ClearAllSchedules()
-{
-    var schedules = await _context.Schedules.ToListAsync();
-    _context.Schedules.RemoveRange(schedules);
-    await _context.SaveChangesAsync();
-
-    TempData["SuccessMessage"] = "All schedules cleared!";
-    return RedirectToAction("Generated");
-}
-
-[HttpPost]
-public async Task<IActionResult> Regenerate()
-{
-    // Clear first
-    var schedules = await _context.Schedules.ToListAsync();
-    _context.Schedules.RemoveRange(schedules);
-    await _context.SaveChangesAsync();
-
-    // Then generate
-    return await Generate();
-}
-
-        public IActionResult SelectBatch()
+public IActionResult SelectBatch()
         {
             var batches = _context.Batchs.ToList(); 
             return View(batches);
@@ -339,7 +294,7 @@ public async Task<IActionResult> Regenerate()
                 .Include(s => s.TimeSlot)
                     .ThenInclude(ts => ts.DaysOfWeek)
                 .AsNoTracking()
-                .Where(s => s.Allocation.Section.Batch.Id == id) // filter by batch ID
+                .Where(s => s.Allocation.Section.Batch.Id == id) 
                 .ToList();
 
             var groupedSchedules = schedules
@@ -368,7 +323,44 @@ public async Task<IActionResult> Regenerate()
 
 
 
-        // Views for filtering by batch
+        public IActionResult ViewBySection()
+        {
+            var schedules = _context.Schedules
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                        .ThenInclude(sec => sec.Batch)
+                .Include(s => s.TimeSlot)
+                    .ThenInclude(ts => ts.DaysOfWeek)
+                .AsNoTracking()
+                .ToList();
+
+            var groupedSchedules = schedules
+                .GroupBy(s => s.Allocation.Section.Batch.Name)
+                .OrderBy(g => g.Key)
+                .Select(batchGroup => new
+                {
+                    BatchName = batchGroup.Key,
+                    Sections = batchGroup
+                        .GroupBy(s => s.Allocation.Section.Id)
+                        .OrderBy(g => g.First().Allocation.Section.Name)
+                        .Select(sectionGroup => new
+                        {
+                            Section = sectionGroup.First().Allocation.Section,
+                            Schedules = sectionGroup
+                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Id)
+                                .ThenBy(s => s.TimeSlot.From)
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return View("ViewBySection", groupedSchedules);
+        }
         public IActionResult ViewByBatch(int scheduleSettingId)
         {
             var schedules = _context.Schedules
@@ -378,7 +370,7 @@ public async Task<IActionResult> Regenerate()
         .ThenInclude(a => a.Course)
           .Include(s => s.Allocation)
         .ThenInclude(a => a.Instructor)
-                .Include(s => s.TimeSlot).ThenInclude(t=>t.DaysOfWeek)
+                .Include(s => s.TimeSlot).ThenInclude(t => t.DaysOfWeek)
                 .ToList();
 
             return View(schedules);
@@ -411,6 +403,30 @@ public async Task<IActionResult> Regenerate()
 
             return View(groupedSchedules);
         }
+        [HttpPost]
+        public async Task<IActionResult> Regenerate()
+        {
+
+            var schedules = await _context.Schedules.ToListAsync();
+            _context.Schedules.RemoveRange(schedules);
+            await _context.SaveChangesAsync();
+
+
+            return await Generate();
+        }
+        [HttpPost]
+        public async Task<IActionResult> ClearAllSchedules()
+        {
+            var schedules = await _context.Schedules.ToListAsync();
+            _context.Schedules.RemoveRange(schedules);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "All schedules cleared!";
+            return RedirectToAction("Generated");
+        }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> GetSchedulesBySection(int scheduleId)
@@ -516,7 +532,7 @@ public async Task<IActionResult> Regenerate()
 
             }
 
-            // Swap AllocationId
+            
             var tempAllocationId = schedule1.AllocationId;
             schedule1.AllocationId = schedule2.AllocationId;
             schedule2.AllocationId = tempAllocationId;
@@ -526,50 +542,13 @@ public async Task<IActionResult> Regenerate()
             return RedirectToAction("ViewAllSchedulesByInstructor");
         }
 
-        public IActionResult ViewBySection()
-        {
-            var schedules = _context.Schedules
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Course)
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Section)
-                        .ThenInclude(sec => sec.Batch)
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(ts => ts.DaysOfWeek)
-                .AsNoTracking()
-                .ToList();
-
-            var groupedSchedules = schedules
-                .GroupBy(s => s.Allocation.Section.Batch.Name)
-                .OrderBy(g => g.Key)
-                .Select(batchGroup => new
-                {
-                    BatchName = batchGroup.Key,
-                    Sections = batchGroup
-                        .GroupBy(s => s.Allocation.Section.Id)
-                        .OrderBy(g => g.First().Allocation.Section.Name)
-                        .Select(sectionGroup => new
-                        {
-                            Section = sectionGroup.First().Allocation.Section,
-                            Schedules = sectionGroup
-                                .OrderBy(s => s.TimeSlot.DaysOfWeek.Id)
-                                .ThenBy(s => s.TimeSlot.From)
-                                .ToList()
-                        })
-                        .ToList()
-                })
-                .ToList();
-
-            return View("ViewBySection", groupedSchedules);
-        }
+      
 
         [HttpPost]
         public IActionResult GenerateSectionRoomAssignments()
         {
             var sections = _context.Sections
-                .Where(s => s.RoomId == null) // only assign if not already assigned
+                .Where(s => s.RoomId == null) 
                 .OrderBy(s => s.Name)
                 .ToList();
 
@@ -588,7 +567,7 @@ public async Task<IActionResult> Regenerate()
             {
                 section.RoomId = rooms[roomIndex].Id;
 
-                // Round-robin room assignment (so multiple sections can share rooms)
+              
                 roomIndex = (roomIndex + 1) % rooms.Count;
             }
 
@@ -607,30 +586,10 @@ public async Task<IActionResult> Regenerate()
 
             return View(sectionRooms);
         }
-
-
         public IActionResult Index()
         {
             return View();
         }
-        public async Task<IActionResult> SwapSchedules()
-        {
-            var schedules = await _context.Schedules
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(t => t.DaysOfWeek)
-                .ToListAsync();
-
-            return View(schedules);
-        }
-
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Schedules by Batch";
-    var groupedByBatch = Model.GroupBy(s => s.Allocation.Section.Batch); // group schedules by Batch
+    var groupedByBatch = Model.GroupBy(s => s.Allocation.Section.Batch); 
 }
 
 <h2>Schedules by Batch</h2>
@@ -35,5 +35,5 @@
         </tbody>
     </table>
 
-    <br /> @*  Add some spacing between tables  *@
+    <br />
 }
