@@ -2,38 +2,54 @@
 
 @{
     ViewData["Title"] = "Schedules by Batch";
-    var groupedByBatch = Model.GroupBy(s => s.Allocation.Section.Batch); 
+    var groupedByBatch = Model.GroupBy(s => s.Allocation.Section.Batch);
 }
 
-<h2>Schedules by Batch</h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Schedules by Batch</h2>
+    </div>
 
-@foreach (var batchGroup in groupedByBatch)
-{
-    <h3>Batch: @batchGroup.Key.Name</h3> @*  Batch Name Title *@
+    @foreach (var batchGroup in groupedByBatch)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="h5 mb-0">Batch: @batchGroup.Key.Name</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="align-middle">Section</th>
+                                <th class="align-middle">Course</th>
+                                <th class="align-middle">Instructor</th>
+                                <th class="align-middle">Day</th>
+                                <th class="align-middle">Start - End</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var schedule in batchGroup)
+                            {
+                                <tr>
+                                    <td class="align-middle">@schedule.Allocation.Section.Name</td>
+                                    <td class="align-middle">@schedule.Allocation.Course.Name</td>
+                                    <td class="align-middle">@schedule.Allocation.Instructor.FullName</td>
+                                    <td class="align-middle">@schedule.TimeSlot.DaysOfWeek.Name</td>
+                                    <td class="align-middle">@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Section</th>
-                <th>Course</th>
-                <th>Instructor</th>
-                <th>Day</th>
-                <th>Start - End</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var schedule in batchGroup)
-            {
-                <tr>
-                    <td>@schedule.Allocation.Section.Name</td>
-                    <td>@schedule.Allocation.Course.Name</td>
-                    <td>@schedule.Allocation.Instructor.FullName</td>
-                    <td>@schedule.TimeSlot.DaysOfWeek.Name</td>
-                    <td>@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <br />
-}
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No schedules found
+        </div>
+    }
+</div>
