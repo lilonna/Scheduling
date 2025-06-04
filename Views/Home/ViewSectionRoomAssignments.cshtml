@@ -2,32 +2,42 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
-}
-@model IEnumerable<Scheduling.Models.Section>
-
-@{
     ViewData["Title"] = "Section Room Assignments";
 }
 
-<h2>Section Room Assignments</h2>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Section Name</th>
-            <th>Room Number</th>
-            <th>Block</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var section in Model)
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Section Room Assignments</h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="align-middle">Section Name</th>
+                            <th class="align-middle">Room Number</th>
+                            <th class="align-middle">Block</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var section in Model)
+                        {
+                            <tr>
+                                <td class="align-middle">@(section.Name)</td>
+                                <td class="align-middle">@(section.Room?.RoomNumber ?? "Not Assigned")</td>
+                                <td class="align-middle">@(section.Room?.Block?.Name ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (!Model.Any())
         {
-            <tr>
-                <td>@(section.Name)</td>
-                <td>@(section.Room?.RoomNumber ?? "Not Assigned")</td>
-                <td>@(section.Room?.Block?.Name ?? "-")</td>
-            </tr>
+            <div class="card-footer text-muted">
+                No section assignments found
+            </div>
         }
-    </tbody>
-
-</table>
+    </div>
+</div>

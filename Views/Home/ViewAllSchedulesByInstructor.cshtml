@@ -26,6 +26,7 @@
                                 <th class="p-3 border-top-0">Section</th>
                                 <th class="p-3 border-top-0">Day</th>
                                 <th class="p-3 border-top-0">Time</th>
+                             
                             </tr>
                         </thead>
                         <tbody>
@@ -34,16 +35,13 @@
                                 <tr>
                                     <td class="p-3 border-top">@schedule.Allocation.Course.Name</td>
                                     <td class="p-3 border-top">@schedule.Allocation.Section.Name</td>
-                                    <td class="p-3 border-top">
-                                        <span class="badge badge-primary p-2">
-                                            @schedule.TimeSlot.DaysOfWeek.Name
-                                        </span>
-                                    </td>
+                                    <td class="p-3 border-top"> @schedule.TimeSlot.DaysOfWeek.Name</td>
                                     <td class="p-3 border-top">
                                         <span class="badge badge-light p-2 text-dark font-weight-normal">
                                             @($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")
                                         </span>
                                     </td>
+                                   
                                 </tr>
                             }
                         </tbody>
