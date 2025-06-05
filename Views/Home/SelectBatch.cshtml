@@ -1,66 +1,64 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model IEnumerable<Scheduling.Models.Batch>
+﻿@model IEnumerable<Scheduling.Models.Batch>
 
 @{
-    ViewData["Title"] = "Select a Batch and Department";
+    ViewData["Title"] = "View Schedule by Batch and Department";
 }
 
-<h2>Select Batch and Department</h2>
+<h2>Select a Batch</h2>
 
-<form method="get" asp-controller="Home" asp-action="ViewSectionByBatch">
-    <div class="mb-3 w-50">
-        <label for="batchId" class="form-label">Batch</label>
-        <select id="batchId" name="batchId" class="form-select" required>
-            <option value="">-- Select Batch --</option>
-            @foreach (var batch in Model)
-            {
-                <option value="@batch.Id">@batch.Name</option>
-            }
-        </select>
-    </div>
-
-    <div class="mb-3 w-50">
-        <label for="departmentId" class="form-label">Department</label>
-        <select id="departmentId" name="departmentId" class="form-select" disabled required>
-            <option value="">-- Select Department --</option>
-        </select>
-    </div>
-
-    <button type="submit" class="btn btn-primary mt-3" disabled id="submitBtn">View Schedule</button>
-</form>
+<div class="accordion w-75" id="batchAccordion">
+    @foreach (var batch in Model)
+    {
+        var batchId = batch.Id;
+        var collapseId = $"collapse-{batchId}";
+        var headingId = $"heading-{batchId}";
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="@headingId">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                    @batch.Name
+                </button>
+            </h2>
+            <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#batchAccordion">
+                <div class="accordion-body">
+                    <ul id="dept-list-@batchId" class="list-group">
+                        <li class="list-group-item">Loading departments...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @section Scripts {
     <script>
-        const batchSelect = document.getElementById('batchId');
-        const deptSelect = document.getElementById('departmentId');
-        const submitBtn = document.getElementById('submitBtn');
+        document.querySelectorAll('.accordion-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const batchId = this.dataset.bsTarget.replace('#collapse-', '');
+                const deptList = document.getElementById('dept-list-' + batchId);
 
-        batchSelect.addEventListener('change', function () {
-            const batchId = this.value;
-            deptSelect.innerHTML = '<option>Loading...</option>';
-            deptSelect.disabled = true;
-            submitBtn.disabled = true;
-
-            if (batchId) {
-                fetch(`/Home/GetDepartmentsByBatch?batchId=${batchId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        deptSelect.innerHTML = '<option value="">-- Select Department --</option>';
-                        data.forEach(dept => {
-                            deptSelect.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+                // Only load departments if not loaded yet
+                if (!deptList.dataset.loaded) {
+                    fetch(`/Home/GetDepartmentsByBatch?batchId=${batchId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            deptList.innerHTML = "";
+                            if (data.length === 0) {
+                                deptList.innerHTML = '<li class="list-group-item text-muted">No departments found.</li>';
+                            } else {
+                                data.forEach(dept => {
+                                    const li = document.createElement('li');
+                                    li.className = 'list-group-item';
+                                    const link = document.createElement('a');
+                                    link.href = `/Home/ViewSectionByBatch?batchId=${batchId}&departmentId=${dept.id}`;
+                                    link.textContent = dept.name;
+                                    li.appendChild(link);
+                                    deptList.appendChild(li);
+                                });
+                            }
+                            deptList.dataset.loaded = "true";
                         });
-                        deptSelect.disabled = false;
-                    });
-            }
-        });
-
-        deptSelect.addEventListener('change', function () {
-            submitBtn.disabled = !this.value;
+                }
+            });
         });
     </script>
 }
-

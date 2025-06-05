@@ -291,9 +291,7 @@ public IActionResult SelectBatch()
                 .Include(s => s.Allocation)
                     .ThenInclude(a => a.Section)
                         .ThenInclude(sec => sec.Batch)
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Section)
-                        .ThenInclude(sec => sec.Department)
+                .Include(s => s.Allocation.Section.Department)
                 .Include(s => s.TimeSlot)
                     .ThenInclude(ts => ts.DaysOfWeek)
                 .AsNoTracking()
@@ -324,6 +322,7 @@ public IActionResult SelectBatch()
 
             return View("ViewBySection", groupedSchedules);
         }
+
         [HttpGet]
         public IActionResult GetDepartmentsByBatch(int batchId)
         {
@@ -336,6 +335,7 @@ public IActionResult SelectBatch()
 
             return Json(departments);
         }
+
 
 
 
