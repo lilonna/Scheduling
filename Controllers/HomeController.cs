@@ -281,7 +281,7 @@ public IActionResult SelectBatch()
             var batches = _context.Batchs.ToList(); 
             return View(batches);
         }
-        public IActionResult ViewSectionByBatch(int id)
+        public IActionResult ViewSectionByBatch(int batchId, int departmentId)
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
@@ -291,10 +291,14 @@ public IActionResult SelectBatch()
                 .Include(s => s.Allocation)
                     .ThenInclude(a => a.Section)
                         .ThenInclude(sec => sec.Batch)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Section)
+                        .ThenInclude(sec => sec.Department)
                 .Include(s => s.TimeSlot)
                     .ThenInclude(ts => ts.DaysOfWeek)
                 .AsNoTracking()
-                .Where(s => s.Allocation.Section.Batch.Id == id) 
+                .Where(s => s.Allocation.Section.BatchId == batchId &&
+                            s.Allocation.Section.DepartmentId == departmentId)
                 .ToList();
 
             var groupedSchedules = schedules
@@ -320,6 +324,19 @@ public IActionResult SelectBatch()
 
             return View("ViewBySection", groupedSchedules);
         }
+        [HttpGet]
+        public IActionResult GetDepartmentsByBatch(int batchId)
+        {
+            var departments = _context.Sections
+                .Where(s => s.BatchId == batchId)
+                .Select(s => s.Department)
+                .Distinct()
+                .Select(d => new { id = d.Id, name = d.Name })
+                .ToList();
+
+            return Json(departments);
+        }
+
 
 
 
