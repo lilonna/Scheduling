@@ -3,7 +3,12 @@
 @{
     ViewData["Title"] = "Schedules by Instructor";
 }
-
+@functions {
+    string FormatTime(DateTime dateTime)
+    {
+        return dateTime.ToString("hh:mm tt");
+    }
+}
 <div class="container-fluid py-4">
     <h1 class="text-center mb-5 text-dark font-weight-bold border-bottom border-primary pb-3 d-inline-block">
         Schedules by Instructor
@@ -38,7 +43,7 @@
                                     <td class="p-3 border-top"> @schedule.TimeSlot.DaysOfWeek.Name</td>
                                     <td class="p-3 border-top">
                                         <span class="badge badge-light p-2 text-dark font-weight-normal">
-                                            @($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")
+                                            @($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")
                                         </span>
                                     </td>
                                    

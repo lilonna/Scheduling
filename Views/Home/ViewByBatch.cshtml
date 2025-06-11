@@ -5,6 +5,13 @@
     var groupedByBatch = Model.GroupBy(s => s.Allocation.Section.Batch);
 }
 
+@functions {
+    string FormatTime(DateTime dateTime)
+    {
+        return dateTime.ToString("hh:mm tt");
+    }
+}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Schedules by Batch</h2>
@@ -36,7 +43,7 @@
                                     <td class="align-middle">@schedule.Allocation.Course.Name</td>
                                     <td class="align-middle">@schedule.Allocation.Instructor.FullName</td>
                                     <td class="align-middle">@schedule.TimeSlot.DaysOfWeek.Name</td>
-                                    <td class="align-middle">@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                                    <td class="align-middle">@($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")</td>
                                 </tr>
                             }
                         </tbody>

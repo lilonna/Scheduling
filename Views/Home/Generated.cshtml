@@ -2,16 +2,15 @@
 
 @{
     ViewData["Title"] = "Generated schedule";
-
-    string FormatTime(string dateTimeString)
+}
+@functions {
+    string FormatTime(DateTime dateTime)
     {
-        if (DateTime.TryParse(dateTimeString, out var dateTime))
-        {
-            return dateTime.ToString("hh:mm tt");
-        }
-        return dateTimeString;
+        return dateTime.ToString("hh:mm tt");
     }
 }
+
+
 
 <div class="container-fluid">
     <div class="row mb-4">
@@ -82,7 +81,8 @@
                                             <td class="align-middle">@schedule.Allocation.Instructor.FullName</td>
                                             <td class="align-middle text-center">@schedule.Allocation.Section.Name</td>
                                             <td class="align-middle text-center">@schedule.TimeSlot.DaysOfWeek.Name</td>
-                                            <td class="font-weight-bold">@($"{schedule.TimeSlot.From:hh\\:mm} - {schedule.TimeSlot.To:hh\\:mm}")</td>
+                                            <td class="font-weight-bold">@($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")</td>
+
                                             <td class="align-middle text-center">@(schedule.Room?.RoomNumber ?? schedule.Allocation.Section.Room?.RoomNumber ?? "Not Assigned")</td>
                                         </tr>
                                     }

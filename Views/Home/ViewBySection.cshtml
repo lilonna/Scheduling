@@ -4,19 +4,15 @@
     ViewData["Title"] = "Schedules by Section";
 
 }
-<style>
-    .schedule-cell {
-        cursor: pointer;
-        transition: background-color 0.3s ease;
+
+
+
+@functions {
+    string FormatTime(DateTime dateTime)
+    {
+        return dateTime.ToString("hh:mm tt");
     }
-
-    .table-info {
-        background-color: #d0ebff !important;
-    }
-</style>
-
-
-
+}
 <div class="container mt-4">
     <h1 class="text-center mb-4">Schedules by Section</h1>
 
@@ -72,7 +68,7 @@
                                 @foreach (var time in timeSlots)
                                 {
                                     <tr>
-                                        <td class="fw-semibold">@($"{time.From:hh\\:mm} - {time.To:hh\\:mm}")</td>
+                                        <td class="fw-semibold"> @($"{FormatTime(time.From)} - {FormatTime(time.To)}")</td>
                                         @foreach (var day in days)
                                         {
                                             var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>
@@ -80,9 +76,10 @@
                                             s.TimeSlot.To == time.To &&
                                             s.TimeSlot.DaysOfWeek.Id == day.Id);
 
-                                            <td class="schedule-cell text-center"
+                                            <td class="schedule-cell text-center cursor-pointer transition"
                                                 data-schedule-id="@matchedSchedule?.Id"
                                                 data-section-id="@sectionGroup.Section.Id">
+
                                                 @if (matchedSchedule != null)
                                                 {
                                                     <div class="schedule-content">
@@ -102,12 +99,13 @@
 
                                                         </div>
                                                         <div class="swap-switch mb-1" style="display:none;">
-                                                            <div class="form-check form-switch d-flex justify-content-center">
-                                                                <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
-                                                            </div>
                                                             <small class="text-muted text-center d-block mt-1">
                                                                 To swap schedules, turn this on and click the target schedule.
                                                             </small>
+                                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                                <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
+                                                            </div>
+                                                          
                                                         </div>
                                                     </div>
 
@@ -126,10 +124,6 @@
         </div>
     }
 </div>
-
-
-
-<!-- Feedback Modal -->
 <div class="modal fade" id="swapFeedbackModal" tabindex="-1" aria-labelledby="swapFeedbackLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-danger">
@@ -138,7 +132,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="swapFeedbackBody">
-                <!-- Error content will be injected here -->
+            
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -147,7 +141,7 @@
     </div>
 </div>
 
-<!-- Confirm Swap Modal -->
+
 <div class="modal fade" id="confirmSwapModal" tabindex="-1" aria-labelledby="confirmSwapLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-primary">
@@ -168,72 +162,76 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let selectedCell = null;
-
-        // Enable Bootstrap popovers
+        let firstCell = null;
+        let secondCell = null;
+        let firstSwitchInput = null;
         document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
             new bootstrap.Popover(el);
         });
 
-        function resetSelection() {
-            if (selectedCell) {
-                selectedCell.classList.remove('table-info');
-                const switchDiv = selectedCell.querySelector('.swap-switch');
-                if (switchDiv) switchDiv.style.display = 'none';
-                const input = selectedCell.querySelector('.schedule-toggle');
-                if (input) input.checked = false;
-
-            }
-            selectedCell = null;
+        function clearSelection(cell) {
+            if (!cell) return;
+            cell.classList.remove('table-info');
+            const switchDiv = cell.querySelector('.swap-switch');
+            const input = cell.querySelector('.schedule-toggle');
+            if (switchDiv) switchDiv.style.display = 'none';
+            if (input) input.checked = false;
         }
 
         document.querySelectorAll('.schedule-cell').forEach(cell => {
             const scheduleId = cell.dataset.scheduleId;
             if (!scheduleId) return;
 
-            const switchContainer = cell.querySelector('.swap-switch');
+            const switchDiv = cell.querySelector('.swap-switch');
             const switchInput = cell.querySelector('.schedule-toggle');
 
-            // Click on cell
             cell.addEventListener('click', function () {
-                if (!selectedCell) {
-                    // First selection
-                    if (switchContainer) switchContainer.style.display = 'block';
-                } else if (cell !== selectedCell) {
-                    // Second selection - perform swap check
-                    if (cell.dataset.sectionId !== selectedCell.dataset.sectionId) {
-                        alert("You can only swap within the same section.");
-                        resetSelection();
-                        return;
-                    }
-
-                    // Confirm modal
-                    new bootstrap.Modal(document.getElementById('confirmSwapModal')).show();
-
-                    // Store both ids for later
-                    selectedCell.dataset.swapTargetId = cell.dataset.scheduleId;
+                if (!firstCell) {
+                    firstCell = cell;
+                    firstSwitchInput = switchInput;
+                    cell.classList.add('table-info');
+                    if (switchDiv) switchDiv.style.display = 'block';
+                    return;
                 }
+
+                if (cell === firstCell) return;
+
+                if (!firstSwitchInput?.checked) {
+                    clearSelection(firstCell);
+                    firstCell = cell;
+                    firstSwitchInput = switchInput;
+                    cell.classList.add('table-info');
+                    if (switchDiv) switchDiv.style.display = 'block';
+                    return;
+                }
+                if (firstCell.dataset.sectionId !== cell.dataset.sectionId) {
+                    alert("You can only swap within the same section.");
+                    clearSelection(firstCell);
+                    firstCell = firstSwitchInput = null;
+                    return;
+                }
+
+                secondCell = cell;
+                new bootstrap.Modal(document.getElementById('confirmSwapModal')).show();
             });
 
-            // Toggle swap on first cell
             if (switchInput) {
                 switchInput.addEventListener('change', function () {
                     if (switchInput.checked) {
-                        selectedCell = cell;
+                        firstCell = cell;
+                        firstSwitchInput = switchInput;
                         cell.classList.add('table-info');
                     } else {
-                        cell.classList.remove('table-info');
-                        selectedCell = null;
-                        if (switchContainer) switchContainer.style.display = 'none';
+                        clearSelection(cell);
+                        firstCell = firstSwitchInput = null;
                     }
                 });
             }
         });
 
-        // Confirm Swap
         document.getElementById('confirmSwapBtn').addEventListener('click', function () {
-            const firstId = selectedCell?.dataset.scheduleId;
-            const secondId = selectedCell?.dataset.swapTargetId;
+            const firstId = firstCell?.dataset.scheduleId;
+            const secondId = secondCell?.dataset.scheduleId;
 
             if (!firstId || !secondId) return;
 
@@ -260,9 +258,21 @@
                 })
                 .finally(() => {
                     bootstrap.Modal.getInstance(document.getElementById('confirmSwapModal')).hide();
-                    resetSelection();
+                    clearSelection(firstCell);
+                    clearSelection(secondCell);
+                    firstCell = secondCell = firstSwitchInput = null;
                 });
         });
+        
+        document.getElementById('confirmSwapModal').addEventListener('hidden.bs.modal', function () {
+            clearSelection(firstCell);
+            clearSelection(secondCell);
+            firstCell = secondCell = firstSwitchInput = null;
+        });
+
+
     });
+
+
 </script>
 
