@@ -621,7 +621,7 @@ public IActionResult SelectBatch()
                     {
                         if (TimeOverlaps(s1.TimeSlot.From, s1.TimeSlot.To, s2.TimeSlot.From, s2.TimeSlot.To))
                         {
-                            return true;  // conflict detected
+                            return true; 
                         }
                     }
                 }
@@ -639,7 +639,7 @@ public IActionResult SelectBatch()
         [HttpPost]
         public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId, int newInstructorId)
         {
-            // 1️⃣ Find existing allocation
+            // Find existing allocation
             var existingAllocation = await _context.Allocations
                 .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
 
@@ -649,13 +649,13 @@ public IActionResult SelectBatch()
                 return RedirectToAction("Generated");
             }
 
-            // 2️⃣ Update only the instructor
+            //  Update only the instructor
             existingAllocation.InstructorId = newInstructorId;
 
             _context.Allocations.Update(existingAllocation);
             await _context.SaveChangesAsync();
 
-            // 3️⃣ Check for schedule conflicts after reassignment
+            //  Check for schedule conflicts after reassignment
             bool hasConflict = await CheckInstructorConflicts(newInstructorId);
 
             if (hasConflict)
@@ -671,6 +671,18 @@ public IActionResult SelectBatch()
         }
 
 
+        public async Task<IActionResult> ReassignInstructorForm(int sectionId, int courseId)
+        {
+            var allocation = await _context.Allocations
+                .Include(a => a.Instructor)
+                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
+
+            var instructors = await _context.Instructors.ToListAsync();
+
+            ViewBag.Instructors = instructors;
+
+            return View(allocation);
+        }
 
 
         public IActionResult Index()
