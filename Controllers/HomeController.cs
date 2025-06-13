@@ -671,18 +671,35 @@ public IActionResult SelectBatch()
         }
 
 
-        public async Task<IActionResult> ReassignInstructorForm(int sectionId, int courseId)
+        [HttpGet]
+        public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId)
         {
-            var allocation = await _context.Allocations
-                .Include(a => a.Instructor)
-                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
-
+            // Load list of instructors for dropdown
             var instructors = await _context.Instructors.ToListAsync();
 
+            // Load allocation (just for verification, optional)
+            var allocation = await _context.Allocations
+                .Include(a => a.Course)
+                .Include(a => a.Section)
+                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
+
+            if (allocation == null)
+            {
+                ViewBag.Error = "Allocation not found.";
+                return RedirectToAction("Generated");
+            }
+
+            // Pass data to ViewBag
+            ViewBag.SectionId = sectionId;
+            ViewBag.CourseId = courseId;
+            ViewBag.CourseName = allocation.Course.Name;
+            ViewBag.SectionName = allocation.Section.Name;
             ViewBag.Instructors = instructors;
 
-            return View(allocation);
+            return View();
         }
+
+
 
 
         public IActionResult Index()

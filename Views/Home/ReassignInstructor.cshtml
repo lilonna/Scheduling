@@ -1,26 +1,23 @@
-﻿@model Scheduling.Models.Allocation
-
-@{
-    ViewData["Title"] = "Reassign Instructor";
-    var instructors = ViewBag.Instructors as List<Scheduling.Models.Instructor>;
-}
-
-<h2>Reassign Instructor</h2>
+﻿<h2>Reassign Instructor</h2>
 
 <form asp-action="ReassignInstructor" method="post">
-    <input type="hidden" name="sectionId" value="@Model.SectionId" />
-    <input type="hidden" name="courseId" value="@Model.CourseId" />
+    <input type="hidden" name="sectionId" value="@ViewBag.SectionId" />
+    <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
 
-    <div class="form-group">
-        <label>Current Instructor:</label>
-        <input type="text" class="form-control" value="@Model.Instructor.FullName" readonly />
+    <div class="mb-3">
+        <label>Course:</label>
+        <strong>@ViewBag.CourseName</strong>
     </div>
 
-    <div class="form-group">
-        <label>New Instructor:</label>
-        <select class="form-control" name="newInstructorId" required>
-            <option value="">-- Select Instructor --</option>
-            @foreach (var instructor in instructors)
+    <div class="mb-3">
+        <label>Section:</label>
+        <strong>@ViewBag.SectionName</strong>
+    </div>
+
+    <div class="mb-3">
+        <label for="newInstructorId">Select Instructor:</label>
+        <select class="form-control" id="newInstructorId" name="newInstructorId" required>
+            @foreach (var instructor in (List<Scheduling.Models.Instructor>)ViewBag.Instructors)
             {
                 <option value="@instructor.Id">@instructor.FullName</option>
             }
@@ -28,6 +25,4 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Reassign</button>
-    <a asp-action="Generated" class="btn btn-secondary">Cancel</a>
 </form>
-
