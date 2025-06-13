@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scheduling.Models;
 using System.Diagnostics;
@@ -603,6 +603,76 @@ public IActionResult SelectBatch()
 
             return View(sectionRooms);
         }
+        private async Task<bool> CheckInstructorConflicts(int instructorId)
+        {
+            var instructorSchedules = await _context.Schedules
+                .Include(s => s.TimeSlot)
+                .Where(s => s.Allocation.InstructorId == instructorId)
+                .ToListAsync();
+
+            for (int i = 0; i < instructorSchedules.Count; i++)
+            {
+                for (int j = i + 1; j < instructorSchedules.Count; j++)
+                {
+                    var s1 = instructorSchedules[i];
+                    var s2 = instructorSchedules[j];
+
+                    if (s1.TimeSlot.DaysOfWeekId == s2.TimeSlot.DaysOfWeekId)
+                    {
+                        if (TimeOverlaps(s1.TimeSlot.From, s1.TimeSlot.To, s2.TimeSlot.From, s2.TimeSlot.To))
+                        {
+                            return true;  // conflict detected
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        private bool TimeOverlaps(DateTime start1, DateTime end1, DateTime start2, DateTime end2)
+        {
+            return (start1 < end2) && (start2 < end1);
+        }
+
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId, int newInstructorId)
+        {
+            // 1️⃣ Find existing allocation
+            var existingAllocation = await _context.Allocations
+                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
+
+            if (existingAllocation == null)
+            {
+                ViewBag.Error = "Allocation not found for the given section and course.";
+                return RedirectToAction("Generated");
+            }
+
+            // 2️⃣ Update only the instructor
+            existingAllocation.InstructorId = newInstructorId;
+
+            _context.Allocations.Update(existingAllocation);
+            await _context.SaveChangesAsync();
+
+            // 3️⃣ Check for schedule conflicts after reassignment
+            bool hasConflict = await CheckInstructorConflicts(newInstructorId);
+
+            if (hasConflict)
+            {
+                ViewBag.Warning = "Warning: The new instructor has conflicting schedules. Please review.";
+            }
+            else
+            {
+                ViewBag.Success = "Instructor reassigned successfully without conflicts.";
+            }
+
+            return RedirectToAction("Generated");
+        }
+
+
+
+
         public IActionResult Index()
         {
             return View();
