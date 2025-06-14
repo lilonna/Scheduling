@@ -1,0 +1,40 @@
+﻿@model List<Scheduling.Models.Allocation>
+
+<h2>Search Allocations</h2>
+
+<form method="get" asp-action="ViewAllocations" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchInstructor" class="form-control" placeholder="Enter instructor name"
+               value="@ViewBag.SearchInstructor" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Course</th>
+            <th>Section</th>
+            <th>Instructor</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var allocation in Model)
+        {
+            <tr>
+                <td>@allocation.Course.Name</td>
+                <td>@allocation.Section.Name</td>
+                <td>@allocation.Instructor.FullName</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-action="ReassignInstructor"
+                       asp-route-sectionId="@allocation.SectionId"
+                       asp-route-courseId="@allocation.CourseId">
+                        Reassign Instructor
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

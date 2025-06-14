@@ -700,6 +700,27 @@ public IActionResult SelectBatch()
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> ViewAllocations(string searchInstructor)
+        {
+            var allocationsQuery = _context.Allocations
+                .Include(a => a.Course)
+                .Include(a => a.Section)
+                .Include(a => a.Instructor)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchInstructor))
+            {
+                allocationsQuery = allocationsQuery
+                    .Where(a => a.Instructor.FullName.Contains(searchInstructor));
+            }
+
+            var allocations = await allocationsQuery.ToListAsync();
+
+            ViewBag.SearchInstructor = searchInstructor; 
+            return View(allocations);
+        }
+
 
 
         public IActionResult Index()

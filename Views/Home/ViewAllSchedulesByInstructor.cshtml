@@ -46,10 +46,7 @@
                                             @($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")
                                         </span>
                                     </td>
-                                    <a class="btn btn-sm btn-primary"
-                                       href="@Url.Action("ReassignInstructor", "Home", new { sectionId = schedule.Allocation.SectionId, courseId = schedule.Allocation.CourseId })">
-                                        <i class="fas fa-exchange-alt"></i> Reassign
-                                    </a>
+                                  
                                 </tr>
                             }
                         </tbody>
