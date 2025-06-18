@@ -6,44 +6,84 @@
 }
 
 @functions {
-    string FormatTime(DateTime dateTime)
-    {
-        return dateTime.ToString("hh:mm tt");
-    }
+    string FormatTime(DateTime dt) => dt.ToString("hh:mm tt");
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Schedules by Batch</h2>
-    </div>
+    <h2 class="mb-4">Schedules by Batch</h2>
 
     @foreach (var batchGroup in groupedByBatch)
     {
-        <div class="card shadow-sm mb-4">
+        var schedules = batchGroup.ToList();
+
+       
+        var days = schedules.Select(s => s.TimeSlot.DaysOfWeek)
+        .Distinct()
+        .OrderBy(d => d.Id)
+        .ToList();
+
+        var timeSlots = schedules.Select(s => s.TimeSlot)
+        .GroupBy(t => new { t.From, t.To, t.Name })
+        .Select(g => g.First())
+        .OrderBy(t => t.From)
+        .ToList();
+
+        <div class="card shadow-sm mb-5">
             <div class="card-header bg-primary text-white">
-                <h3 class="h5 mb-0">Batch: @batchGroup.Key.Name</h3>
+                <h5 class="mb-0">Batch: @batchGroup.Key.Name</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th class="align-middle">Section</th>
-                                <th class="align-middle">Course</th>
-                                <th class="align-middle">Instructor</th>
-                                <th class="align-middle">Day</th>
-                                <th class="align-middle">Start - End</th>
+                                <th>Time Slot</th>
+                                @foreach (var day in days)
+                                {
+                                    <th class="text-center">@day.Name</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var schedule in batchGroup)
+                            @foreach (var time in timeSlots)
                             {
                                 <tr>
-                                    <td class="align-middle">@schedule.Allocation.Section.Name</td>
-                                    <td class="align-middle">@schedule.Allocation.Course.Name</td>
-                                    <td class="align-middle">@schedule.Allocation.Instructor.FullName</td>
-                                    <td class="align-middle">@schedule.TimeSlot.DaysOfWeek.Name</td>
-                                    <td class="align-middle">@($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")</td>
+                                    <td>
+                                        <span tabindex="0"
+                                              role="button"
+                                              class="text-primary"
+                                              data-bs-toggle="popover"
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="@($"{FormatTime(time.From)} - {FormatTime(time.To)}")">
+                                            @time.Name
+                                        </span>
+                                    </td>
+                                    @foreach (var day in days)
+                                    {
+                                        var sched = schedules.FirstOrDefault(s =>
+                                        s.TimeSlot.From == time.From &&
+                                        s.TimeSlot.To == time.To &&
+                                        s.TimeSlot.DaysOfWeek.Id == day.Id);
+
+                                        <td class="text-center align-middle">
+                                            @if (sched != null)
+                                            {
+                                                <span tabindex="0"
+                                                      class="text-primary"
+                                                      role="button"
+                                                      data-bs-toggle="popover"
+                                                      data-bs-trigger="hover focus"
+                                                      title="Instructor & Section"
+                                                      data-bs-content="@($"{sched.Allocation.Instructor.FullName} | {sched.Allocation.Section.Name}")">
+                                                    @sched.Allocation.Course.Name
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -55,8 +95,16 @@
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
-            No schedules found
-        </div>
+        <div class="alert alert-info">No schedules found</div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                new bootstrap.Popover(el);
+            });
+        });
+    </script>
+}

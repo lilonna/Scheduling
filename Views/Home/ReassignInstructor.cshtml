@@ -1,28 +1,50 @@
-﻿<h2>Reassign Instructor</h2>
+﻿<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto">
+            <div class="card shadow-sm rounded-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Reassign Instructor
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ReassignInstructor" method="post">
+                        <input type="hidden" name="sectionId" value="@ViewBag.SectionId" />
+                        <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
 
-<form asp-action="ReassignInstructor" method="post">
-    <input type="hidden" name="sectionId" value="@ViewBag.SectionId" />
-    <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Course:</label>
+                            <div class="fw-semibold text-primary">@ViewBag.CourseName</div>
+                        </div>
 
-    <div class="mb-3">
-        <label>Course:</label>
-        <strong>@ViewBag.CourseName</strong>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Section:</label>
+                            <div class="fw-semibold text-primary">@ViewBag.SectionName</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="newInstructorId" class="form-label fw-bold">Select New Instructor:</label>
+                            <select class="form-select w-100" id="newInstructorId" name="newInstructorId" required>
+                                <option disabled selected value="">Choose an Instructor</option>
+                                @foreach (var instructor in (List<Scheduling.Models.Instructor>)ViewBag.Instructors)
+                                {
+                                    <option value="@instructor.Id">@instructor.FullName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-check me-1"></i>Reassign
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label>Section:</label>
-        <strong>@ViewBag.SectionName</strong>
-    </div>
 
-    <div class="mb-3">
-        <label for="newInstructorId">Select Instructor:</label>
-        <select class="form-control" id="newInstructorId" name="newInstructorId" required>
-            @foreach (var instructor in (List<Scheduling.Models.Instructor>)ViewBag.Instructors)
-            {
-                <option value="@instructor.Id">@instructor.FullName</option>
-            }
-        </select>
-    </div>
 
-    <button type="submit" class="btn btn-primary">Reassign</button>
-</form>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />

@@ -14,7 +14,7 @@
     }
 }
 <div class="container mt-4">
-    <h1 class="text-center mb-4">Schedules by Section</h1>
+    <h1 class="text-center mb-4">Schedules by Section </h1>
 
 
 
@@ -68,7 +68,19 @@
                                 @foreach (var time in timeSlots)
                                 {
                                     <tr>
-                                        <td class="fw-semibold"> @($"{FormatTime(time.From)} - {FormatTime(time.To)}")</td>
+                                        <td class="fw-semibold">
+                                            <span tabindex="0"
+                                                  class="text-primary"
+                                                  role="button"
+                                                  data-bs-toggle="popover"
+                                                  data-bs-trigger="hover focus"
+                                                  data-bs-placement="top"
+                                                 
+                                                  data-bs-content="@($"{FormatTime(time.From)} - {FormatTime(time.To)}")">
+                                                @time.Name
+                                            </span>
+                                        </td>
+
                                         @foreach (var day in days)
                                         {
                                             var matchedSchedule = ((IEnumerable<dynamic>)sectionGroup.Schedules).FirstOrDefault(s =>

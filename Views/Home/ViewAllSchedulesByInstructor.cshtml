@@ -23,30 +23,74 @@
                 </h2>
             </div>
             <div class="card-body p-0">
+                @{
+                    var schedules = ((IEnumerable<dynamic>)group.Schedules).ToList();
+
+                    var days = schedules
+                    .Select(s => (dynamic)s.TimeSlot.DaysOfWeek)
+                    .GroupBy(d => d.Id)
+                    .Select(g => g.First())
+                    .OrderBy(d => d.Id)
+                    .ToList();
+
+                    var timeSlots = schedules
+                    .Select(s => (dynamic)s.TimeSlot)
+                    .GroupBy(t => new { t.From, t.To })
+                    .Select(g => g.First())
+                    .OrderBy(t => t.From)
+                    .ToList();
+                }
+
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th class="p-3 border-top-0">Course</th>
-                                <th class="p-3 border-top-0">Section</th>
-                                <th class="p-3 border-top-0">Day</th>
-                                <th class="p-3 border-top-0">Time</th>
-                             
+                                <th>Time Slot</th>
+                                @foreach (var day in days)
+                                {
+                                    <th class="text-center">@day.Name</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var schedule in group.Schedules)
+                            @foreach (var time in timeSlots)
                             {
                                 <tr>
-                                    <td class="p-3 border-top">@schedule.Allocation.Course.Name</td>
-                                    <td class="p-3 border-top">@schedule.Allocation.Section.Name</td>
-                                    <td class="p-3 border-top"> @schedule.TimeSlot.DaysOfWeek.Name</td>
-                                    <td class="p-3 border-top">
-                                        <span class="badge badge-light p-2 text-dark font-weight-normal">
-                                            @($"{FormatTime(schedule.TimeSlot.From)} - {FormatTime(schedule.TimeSlot.To)}")
+                                    <td>
+                                        <span tabindex="0"
+                                              class="text-primary"
+                                              role="button"
+                                              data-bs-toggle="popover"
+                                              data-bs-trigger="hover focus"
+                                              data-bs-placement="top"
+                                              data-bs-content="@($"{FormatTime(time.From)} - {FormatTime(time.To)}")">
+                                            @time.Name
                                         </span>
                                     </td>
-                                  
+
+                                    @foreach (var day in days)
+                                    {
+                                        var sched = schedules.FirstOrDefault(s =>
+                                        s.TimeSlot.From == time.From &&
+                                        s.TimeSlot.To == time.To &&
+                                        s.TimeSlot.DaysOfWeek.Id == day.Id);
+
+                                        <td class="text-center align-middle">
+                                            @if (sched != null)
+                                            {
+                                                <span tabindex="0"
+                                                      class="text-primary"
+                                                      role="button"
+                                                      data-bs-toggle="popover"
+                                                      data-bs-trigger="hover focus"
+                                                      data-bs-placement="top"
+                                                      title="Section"
+                                                      data-bs-content="@sched.Allocation.Section.Name">
+                                                    @sched.Allocation.Course.Name
+                                                </span>
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -57,5 +101,14 @@
     }
 </div>
 
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                new bootstrap.Popover(el);
+            });
+        });
+    </script>
+}
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
