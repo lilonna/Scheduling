@@ -4,85 +4,87 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Scheduling</title>
+
+   
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Scheduling.styles.css" asp-append-version="true" />
-    <style>
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            position: sticky;
-            top: 56px;
-        }
-
-        main {
-            margin-top: 56px;
-        }
-    </style>
 </head>
 <body>
-  
-
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
-                <div class="position-sticky pt-3">
-                    <div class="text-center text-white mb-4">
-                        <h4>Class Scheduler</h4>
-                    </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a href="/Home" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Index" ? "active bg-primary text-white" : "text-white")">
-                                <i class="fas fa-home me-2"></i>Home
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/Home/Generate" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "Generate" ? "active bg-primary text-white" : "text-white")">
-                                <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <form asp-action="GenerateSectionRoomAssignments" method="post" class="nav-link text-white">
-                                <button type="submit" class="btn btn-link text-white text-decoration-none p-0">
-                                    <i class="fas fa-door-open me-2"></i>Generate Room Assignments
-                                </button>
-                            </form>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/Home/ViewAllSchedulesByInstructor" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ViewAllSchedulesByInstructor" ? "active bg-primary text-white" : "text-white")">
-                                <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/Home/ViewByBatch" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "ViewByBatch" ? "active bg-primary text-white" : "text-white")">
-                                <i class="fas fa-users me-2"></i>Batch Schedules
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/Home/SelectBatch" class="nav-link @(ViewContext.RouteData.Values["Action"].ToString() == "SelectBatch" ? "active bg-primary text-white" : "text-white")">
-                                <i class="fas fa-list me-2"></i>View Sections
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+          
+            <nav class="col-md-3 col-lg-2 bg-dark min-vh-100 d-flex flex-column p-3">
+                <h4 class="text-white text-center mb-4">Class Scheduler</h4>
+                <ul class="nav nav-pills flex-column">
+                    <li class="nav-item mb-1">
+                        <a href="/Home" class="nav-link text-white @IsActive("Home", "Index")">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a href="/Home/Generate" class="nav-link text-white @IsActive("Home", "Generate")">
+                            <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <form asp-action="GenerateSectionRoomAssignments" method="post" class="d-inline w-100">
+                            <button type="submit" class="btn btn-link nav-link text-white text-start w-100 p-0">
+                                <i class="fas fa-door-open me-2"></i>Generate Room Assignments
+                            </button>
+                        </form>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a href="/Home/ViewAllSchedulesByInstructor" class="nav-link text-white @IsActive("Home", "ViewAllSchedulesByInstructor")">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a href="/Home/ViewByBatch" class="nav-link text-white @IsActive("Home", "ViewByBatch")">
+                            <i class="fas fa-users me-2"></i>Batch Schedules
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a href="/Home/SelectBatch" class="nav-link text-white @IsActive("Home", "SelectBatch")">
+                            <i class="fas fa-list me-2"></i>View Sections
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a asp-action="ViewAllocations" asp-controller="Home" class="nav-link text-white @IsActive("Home", "ViewAllocations")">
+                            <i class="fas fa-tasks me-2"></i>Manage Allocations
+                        </a>
+                    </li>
+                </ul>
+            </nav>
 
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+           
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-4">
                 @RenderBody()
             </main>
         </div>
     </div>
 
-    <footer class="border-top footer text-muted">
+  
+    <footer class="bg-light text-center py-3 border-top mt-auto">
         <div class="container">
             &copy; 2025 - Scheduling - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
+   
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    @functions {
+        private string IsActive(string controller, string action)
+        {
+            var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+            var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+            return controller == currentController && action == currentAction ? "bg-primary text-white" : "";
+        }
+    }
 </body>
 </html>

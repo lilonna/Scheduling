@@ -667,7 +667,7 @@ public IActionResult SelectBatch()
                 ViewBag.Success = "Instructor reassigned successfully without conflicts.";
             }
 
-            return RedirectToAction("Generated");
+            return RedirectToAction("ViewAllocations");
         }
 
 
@@ -717,7 +717,8 @@ public IActionResult SelectBatch()
 
             var allocations = await allocationsQuery.ToListAsync();
 
-            ViewBag.SearchInstructor = searchInstructor; 
+            ViewBag.SearchInstructor = searchInstructor;
+            ViewBag.Instructors = await _context.Instructors.ToListAsync();
             return View(allocations);
         }
 
