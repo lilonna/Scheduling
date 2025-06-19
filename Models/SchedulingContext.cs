@@ -29,7 +29,11 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Department> Departments { get; set; }
 
+    public virtual DbSet<Gender> Genders { get; set; }
+
     public virtual DbSet<Instructor> Instructors { get; set; }
+
+    public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Room> Rooms { get; set; }
 
@@ -45,6 +49,10 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
 
+    public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<UserRole> UserRoles { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("name=SchedulingConnection");
 
@@ -52,7 +60,7 @@ public partial class SchedulingContext : DbContext
     {
         modelBuilder.Entity<Allocation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_users");
+            entity.HasKey(e => e.Id).HasName("PK_Allocation");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
 
@@ -101,11 +109,21 @@ public partial class SchedulingContext : DbContext
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
+        modelBuilder.Entity<Gender>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
         modelBuilder.Entity<Instructor>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_floors");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 
         modelBuilder.Entity<Room>(entity =>
@@ -197,6 +215,28 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.DaysOfWeek).WithMany(p => p.TimeSlots)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TimeSlots_DaysOfWeek");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Gender).WithMany(p => p.Users)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Users_Gender");
+        });
+
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Role).WithMany(p => p.UserRoles)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserRoles_Roles");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserRoles)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UserRoles_Users");
         });
 
         OnModelCreatingPartial(modelBuilder);
