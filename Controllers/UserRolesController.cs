@@ -12,22 +12,6 @@ namespace Scheduling.Controllers
         {
             _context = context;
         }
-
-    }
-}
-
-
-namespace LEMS.Controllers
-{
-    public class UserRolesController : Controller
-    {
-        private readonly LEMSContext _context;
-
-        public UserRolesController(LEMSContext context)
-        {
-            _context = context;
-        }
-
         // GET: UserRoles
         public async Task<IActionResult> Index()
         {
@@ -175,5 +159,7 @@ namespace LEMS.Controllers
         {
             return _context.UserRoles.Any(e => e.Id == id);
         }
+
     }
 }
+

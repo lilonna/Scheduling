@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Scheduling.Models;
 using Scheduling.Utilities;
 using hu_utils;
+using Scheduling.ViewModels;
 
 namespace Scheduling.Controllers
 {
