@@ -1,0 +1,58 @@
+﻿@model Scheduling.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Log In";
+}
+
+<div class="login p-0">
+    <div class="login-container p-0">
+        <div class="card">
+            <div class="card-header" style="border-bottom-color: rgb(45, 108, 162)">
+                <h2 class="card-text ps-1">Log In</h2>
+                <span class="badge text-dark w-100 text-start">
+                    Use your <i>Username</i> and <i>Password</i> to log in
+                </span>
+            </div>
+
+            <form asp-action="LogIn" asp-controller="Pub" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label"></label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" class="btn w-100 text-white" style="background-color: rgb(45, 108, 162)">
+                        <i class="fa fa-key me-1"></i> Login
+                    </button>
+                </div>
+
+                <div class="card-body">
+                    <h4>Need Account?</h4>
+                    <a asp-action="SignUp" asp-controller="Pub">Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

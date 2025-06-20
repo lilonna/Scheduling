@@ -1,0 +1,165 @@
+﻿@{
+    ViewData["Title"] = "LogIn";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header py-2">
+                    <h4 class="text-left font-weight-light">
+                        Create Account
+                    </h4>
+                    <p>
+
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form asp-action="SignUp" asp-controller="Pub" method="post" class="mx-1 mx-md-4">
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-user fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="text" id="FirstName" name="firstName" class="form-control" placeholder="Your FirstName" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="text" id="MiddleName" name="middleName" class="form-control" placeholder="Your MiddleName" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="text" id="LastName" name="lastName" class="form-control" placeholder="Your LastName" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-lock fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="text" id="UserName" name="userName" class="form-control" placeholder="Your UserName" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-lock fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="password" id="Password" name="password" class="form-control" placeholder="Your Password" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-key fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="text" id="PhoneNumber" name="phoneNumber" class="form-control" placeholder="Your PhoneNumber" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-key fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <input type="email" id="email" name="email" class="form-control" placeholder="Email" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-row align-items-center mb-3">
+
+                            <i class="fas fa-venus-mars fa-lg me-3 fa-fw"></i>
+                            <div data-mdb-input-init class="form-outline flex-fill mb-0">
+                                <select id="GenderId" name="genderId" class="form-control" required>
+                                    <option value="" disabled selected>Select your gender</option>
+                                    <option value="1">Male</option>
+                                    <option value="2">Female</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
+                            <button type="submit" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-lg">Register</button>
+                        </div>
+
+                    </form>
+
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small"><a asp-action="LogIn" asp-controller="Pub">Back to Login</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: #008080;
+        color: white;
+    }
+
+        .card-header h4 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #e0f7f7;
+        }
+
+    .form-control::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+    }
+
+    .btn-primary {
+        background-color: #008080;
+        border-color: #008080;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 6px;
+    }
+
+        .btn-primary:hover {
+            background-color: #006666;
+            border-color: #006666;
+        }
+
+    .card-footer {
+        background-color: #f0fdfa;
+    }
+
+        .card-footer a {
+            color: #008080;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+            .card-footer a:hover {
+                text-decoration: underline;
+            }
+
+    i.fa-lg {
+        color: #008080;
+    }
+</style>

@@ -1,90 +1,78 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+
+    int? userId = HttpContextAccessor.HttpContext.Session.GetInt32("UserId");
+}
+
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Scheduling</title>
-
-   
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/icon/fontawesome/styles.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Scheduling.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-          
-            <nav class="col-md-3 col-lg-2 bg-dark min-vh-100 d-flex flex-column p-3">
-                <h4 class="text-white text-center mb-4">Class Scheduler</h4>
-                <ul class="nav nav-pills flex-column">
-                    <li class="nav-item mb-1">
-                        <a href="/Home" class="nav-link text-white @IsActive("Home", "Index")">
-                            <i class="fas fa-home me-2"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <a href="/Home/Generate" class="nav-link text-white @IsActive("Home", "Generate")">
-                            <i class="fas fa-calendar-alt me-2"></i>Generate Schedule
-                        </a>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <form asp-action="GenerateSectionRoomAssignments" method="post" class="d-inline w-100">
-                            <button type="submit" class="btn btn-link nav-link text-white text-start w-100 p-0">
-                                <i class="fas fa-door-open me-2"></i>Generate Room Assignments
-                            </button>
-                        </form>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <a href="/Home/ViewAllSchedulesByInstructor" class="nav-link text-white @IsActive("Home", "ViewAllSchedulesByInstructor")">
-                            <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
-                        </a>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <a href="/Home/ViewByBatch" class="nav-link text-white @IsActive("Home", "ViewByBatch")">
-                            <i class="fas fa-users me-2"></i>Batch Schedules
-                        </a>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <a href="/Home/SelectBatch" class="nav-link text-white @IsActive("Home", "SelectBatch")">
-                            <i class="fas fa-list me-2"></i>View Sections
-                        </a>
-                    </li>
-                    <li class="nav-item mb-1">
-                        <a asp-action="ViewAllocations" asp-controller="Home" class="nav-link text-white @IsActive("Home", "ViewAllocations")">
-                            <i class="fas fa-tasks me-2"></i>Manage Allocations
-                        </a>
-                    </li>
-                </ul>
-            </nav>
 
-           
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-4 py-4">
-                @RenderBody()
-            </main>
-        </div>
+    <header>
+        <nav class="navbar navbar-expand-sm  navbar-toggleable-sm navbar-light  border-bottom box-shadow py-0" style="background-color: rgb(45, 108, 162);">
+            <div class="container py-0">
+                <a class="navbar-brand" href="#">
+                    <img src="~/images/logo.png" alt="University Logo" width="80">
+                </a>
+                <a class="navbar-brand text-white" style="font-size: 28px;" asp-area="" asp-controller="Home" asp-action="Index">
+                    Scheduling
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
+                    @if (userId == null)
+                    {
+                        <partial name="Components/menu/_pub" />
+                    }
+                    else
+                    {
+                        var role = HttpContextAccessor.HttpContext.Session.GetString("RoleName");
+                        if (role == "admin")
+                        {
+                            <partial name="Components/menu/_admin" />
+                        }
+                        else if (role == "lab technical")
+                        {
+                            <partial name="Components/menu/_pub" />
+                        }
+                    }
+
+                </div>
+
+
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-4">
+        @RenderBody()
     </div>
 
-  
-    <footer class="bg-light text-center py-3 border-top mt-auto">
+    <footer class="border-top footer text-muted text-white-50 bg-dark">
         <div class="container">
-            &copy; 2025 - Scheduling - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - Scheduling - <a class="text-white-50" asp-area="" asp-controller="Pub" asp-action="About">Hawassa University Application Development Team</a>
         </div>
     </footer>
-
-   
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-
-    @functions {
-        private string IsActive(string controller, string action)
-        {
-            var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
-            var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
-            return controller == currentController && action == currentAction ? "bg-primary text-white" : "";
-        }
-    }
 </body>
 </html>
