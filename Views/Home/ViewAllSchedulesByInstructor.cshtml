@@ -9,18 +9,18 @@
         return dateTime.ToString("hh:mm tt");
     }
 }
-<div class="container-fluid py-4">
-    <h1 class="text-center mb-5 text-dark font-weight-bold border-bottom border-primary pb-3 d-inline-block">
+<div class="container mt-4">
+    <h2 class=" mb-4">
         Schedules by Instructor
-    </h1>
+    </h2>
 
     @foreach (var group in Model)
     {
         <div class="card shadow mb-5 rounded-lg">
-            <div class="card-header bg-primary text-white py-3 rounded-top">
-                <h2 class="mb-0">
-                    <i class="fas fa-user-tie mr-2"></i>@group.Instructor.FullName
-                </h2>
+            <div class="card-header text-white" style="background-color: rgb(45, 108, 162);">
+                <h5 class="mb-0">
+                   @group.Instructor.FullName
+                </h5>
             </div>
             <div class="card-body p-0">
                 @{

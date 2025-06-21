@@ -1,11 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Scheduling.Models;
+using Scheduling.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSession();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UserManagement>();
+
 
 
 
@@ -23,6 +29,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthorization();
 

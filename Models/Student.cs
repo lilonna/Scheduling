@@ -6,16 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Scheduling.Models;
 
-public partial class Instructor
+public partial class Student
 {
-    [Key]
-    public int Id { get; set; }
-
     [StringLength(50)]
-    public string FullName { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
     public int? UserId { get; set; }
 
-    [InverseProperty("Instructor")]
-    public virtual ICollection<Allocation> Allocations { get; set; } = new List<Allocation>();
+    public int? BatchId { get; set; }
+
+    public int? SectionId { get; set; }
+
+    [Key]
+    public int Id { get; set; }
 }

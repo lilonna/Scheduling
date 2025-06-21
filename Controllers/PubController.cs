@@ -109,7 +109,13 @@ namespace Scheduling.Controllers
             return RedirectToAction("LogIn", "Pub");
         }
 
-
+        public ActionResult LogOut()
+        {
+            TempData["Headedto"] = null;
+            HttpContext.Session.Remove("UserId");
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Home");
+        }
         public IActionResult SignUp()
         {
 

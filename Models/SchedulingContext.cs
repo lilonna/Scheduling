@@ -47,6 +47,8 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<SstimeSlot> SstimeSlots { get; set; }
 
+    public virtual DbSet<Student> Students { get; set; }
+
     public virtual DbSet<TimeSlot> TimeSlots { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -202,6 +204,11 @@ public partial class SchedulingContext : DbContext
             entity.HasOne(d => d.Ss).WithMany(p => p.SstimeSlots)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SSTimeSlots_ScheduleSettings");
+        });
+
+        modelBuilder.Entity<Student>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
         modelBuilder.Entity<TimeSlot>(entity =>

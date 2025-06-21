@@ -13,9 +13,9 @@
 
 
 <div class="container-fluid">
-    <div class="row mb-4">
+    <div class="row mb-0">
         <div class="col-md-12">
-            <h2 class="text-center display-4 mb-4 text-dark">Generated Schedule</h2>
+          
 
             @if (ViewBag.SuccessMessage != null)
             {
@@ -36,28 +36,43 @@
                     </button>
                 </div>
             }
+            <div class="row align-items-center ">
+                <div class="col-md-6">
+                    <p class="display-4 text-dark">Generated Schedule</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="scheduleActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Schedule Actions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="scheduleActionsDropdown">
+                            <li>
+                                <form asp-action="ClearAllSchedules" method="post" class="dropdown-item p-0">
+                                    <button type="submit" class="btn btn-link dropdown-item text-danger">
+                                        <i class="fas fa-trash-alt me-2"></i>Clear All Schedules
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
+                                <form asp-action="Regenerate" method="post" class="dropdown-item p-0">
+                                    <button type="submit" class="btn btn-link dropdown-item text-warning">
+                                        <i class="fas fa-sync-alt me-2"></i>Regenerate Schedule
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+           
+
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-12 d-flex justify-content-between">
-            <form asp-action="ClearAllSchedules" method="post">
-                <button type="submit" class="btn btn-danger btn-lg">
-                    <i class="fas fa-trash-alt mr-2"></i>Clear All Schedules
-                </button>
-            </form>
-
-            <form asp-action="Regenerate" method="post">
-                <button type="submit" class="btn btn-warning btn-lg">
-                    <i class="fas fa-sync-alt mr-2"></i>Regenerate Schedule
-                </button>
-            </form>
-        </div>
-    </div>
 
     @if (Model != null && Model.Any())
     {
-        <div class="row">
+        
             <div class="col-md-12">
                 <div class="card shadow-sm border-light">
                     <div class="card-body p-0">
@@ -92,7 +107,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+
     }
     else
     {
