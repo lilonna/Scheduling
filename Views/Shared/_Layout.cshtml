@@ -1,9 +1,10 @@
 ﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @{
-
     int? userId = HttpContextAccessor.HttpContext.Session.GetInt32("UserId");
+    string role = HttpContextAccessor.HttpContext.Session.GetString("Role");
 }
+
 
 
 
@@ -36,25 +37,37 @@
                 </button>
 
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-
                     @if (userId == null)
                     {
                         <partial name="Components/menu/_pub" />
                     }
                     else
                     {
-                        var role = HttpContextAccessor.HttpContext.Session.GetString("RoleName");
                         if (role == "admin")
                         {
                             <partial name="Components/menu/_admin" />
                         }
-                        else if (role == "lab technical")
+
+                     
+                        if (role == "Instructor")
                         {
-                            <partial name="Components/menu/_pub" />
+                            <li class="nav-item">
+                                <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyInstructorSchedule">
+                                    <i class="fas fa-calendar-alt me-2"></i> My Teaching Schedule
+                                </a>
+                            </li>
+                        }
+                        else if (role == "Student")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyStudentSchedule">
+                                    <i class="fas fa-calendar-alt me-2"></i> My Schedule
+                                </a>
+                            </li>
                         }
                     }
-
                 </div>
+
 
 
             </div>

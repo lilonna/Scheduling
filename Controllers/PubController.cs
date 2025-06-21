@@ -41,7 +41,8 @@ namespace Scheduling.Controllers
             if (Headedto != null) TempData["Headedto"] = Headedto;
             var users = _context.Users
                 .Where(x => x.UserName == login.UserName)
-                .Include(x => x.UserRoles);
+                .Include(x => x.UserRoles).ThenInclude(ur => ur.Role);
+
             var user = users.FirstOrDefault();
             if (user != null)
             {
@@ -83,12 +84,19 @@ namespace Scheduling.Controllers
                     _um.setUserBasicInfo(user);
                     // Get user's role name
                     var roleName = user.UserRoles
-                        .Where(ur => ur.IsActive && !ur.IsDeleted)
-                        .Select(ur => ur.Role.Name)
-                        .FirstOrDefault();
+         .Where(ur => ur.IsActive && !ur.IsDeleted)
+         .Select(ur => ur.Role.Name)
+         .FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(roleName))
+                    {
+                        TempData["Error"] = "No role assigned to this user. Please contact the system administrator.";
+                        return RedirectToAction("LogIn", "Pub");
+                    }
 
                     HttpContext.Session.SetString("Role", roleName);
                     HttpContext.Session.SetInt32("UserId", user.Id);
+
 
                     if (roleName == "Student")
                     {
@@ -124,7 +132,7 @@ namespace Scheduling.Controllers
                     {
                         if (user.FailureCount == 4)
                         {
-                            //BackgroundJob.Enqueue(() => Mailer.crackAttempt(user.Id));
+                         
                         }
                         user.FailureCount += 1;
                         _context.Entry(user).State = EntityState.Modified;
@@ -154,7 +162,6 @@ namespace Scheduling.Controllers
 
         public IActionResult SignUp(string firstName, string middleName, string phoneNumber, string email, string lastName, int genderId, string userName, string password)
         {
-
             var newUser = new User
             {
                 FirstName = firstName,
@@ -162,7 +169,6 @@ namespace Scheduling.Controllers
                 LastName = lastName,
                 UserName = userName,
                 Password = password,
-                //DefaultLanguageId = 1,
                 Email = email,
                 PhoneNumber = phoneNumber,
                 GenderId = genderId,
@@ -170,23 +176,39 @@ namespace Scheduling.Controllers
                 IsActive = true,
                 IsDeleted = false,
                 LastLogon = DateTime.Now,
-
-
             };
 
             _context.Users.Add(newUser);
             _context.SaveChanges();
+
+            // Encrypt and update password after getting the UserId
             encryptPassword(newUser.Id, newUser.Password);
 
-            TempData["Success"] = " you have successfully registered!!";
+            // 👉 Assign Student role
+            var studentRole = _context.Roles.FirstOrDefault(r => r.Name == "Student" && r.IsActive && !r.IsDeleted);
+            if (studentRole != null)
+            {
+                var userRole = new UserRole
+                {
+                    UserId = newUser.Id,
+                    RoleId = studentRole.Id,
+                    IsDefault = true,
+                    IsActive = true,
+                    IsDeleted = false
+                };
+                _context.UserRoles.Add(userRole);
+                _context.SaveChanges();
+            }
+            else
+            {
+                TempData["Error"] = "Student role not found. Please contact the administrator.";
+                return RedirectToAction("SignUp");
+            }
 
+            TempData["Success"] = "You have successfully registered!";
             return RedirectToAction("Login");
-
-
-            //TempData["Error"] = "Not registered.";
-            //return View();
-
         }
+
         private void encryptPassword(int userId, string password)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == userId);
