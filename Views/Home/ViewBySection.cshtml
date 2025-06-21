@@ -21,13 +21,13 @@
 
     @foreach (var batch in Model)
     {
-        <div class="mb-5">
-            <h2 class="mb-4"> @batch.BatchName</h2>
+        <div class="mb-2">
+          
 
             @foreach (var sectionGroup in batch.Sections)
             {
-                <div class="mb-4">
-                    <h3 class="h4 mb-3"> @sectionGroup.Section.Name</h3>
+                <div class="mb-2">
+                    <h3 class="h4 mb-2 " > @sectionGroup.Section.Name</h3>
 
                     @{
                         var days = new List<dynamic>();

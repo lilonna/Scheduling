@@ -338,6 +338,36 @@ public IActionResult SelectBatch()
 
 
 
+        public async Task<IActionResult> MyInstructorSchedule()
+        {
+            var instructorId = HttpContext.Session.GetInt32("InstructorId");
+            if (instructorId == null) return Unauthorized();
+
+            var schedules = await _context.Schedules
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation.Section)
+                .Where(s => s.Allocation.InstructorId == instructorId)
+                .ToListAsync();
+
+            return View("AllInstructorSchedules", schedules); 
+        }
+        public async Task<IActionResult> MyStudentSchedule()
+        {
+            var sectionId = HttpContext.Session.GetInt32("SectionId");
+            if (sectionId == null) return Unauthorized();
+
+            var schedules = await _context.Schedules
+                .Include(s => s.TimeSlot)
+                .Include(s => s.Allocation)
+                    .ThenInclude(a => a.Course)
+                .Include(s => s.Allocation.Instructor)
+                .Where(s => s.Allocation.SectionId == sectionId)
+                .ToListAsync();
+
+            return View("ViewBySection", schedules); 
+        }
 
 
         public IActionResult ViewBySection()

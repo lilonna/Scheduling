@@ -81,6 +81,33 @@ namespace Scheduling.Controllers
 
                     _um.LoadUserRole(user.Id);
                     _um.setUserBasicInfo(user);
+                    // Get user's role name
+                    var roleName = user.UserRoles
+                        .Where(ur => ur.IsActive && !ur.IsDeleted)
+                        .Select(ur => ur.Role.Name)
+                        .FirstOrDefault();
+
+                    HttpContext.Session.SetString("Role", roleName);
+                    HttpContext.Session.SetInt32("UserId", user.Id);
+
+                    if (roleName == "Student")
+                    {
+                        var student = _context.Students.FirstOrDefault(s => s.UserId == user.Id);
+                        if (student != null)
+                        {
+                            HttpContext.Session.SetInt32("SectionId", student.SectionId ?? 0);
+                            HttpContext.Session.SetInt32("BatchId", student.BatchId ?? 0);
+                        }
+                    }
+                    else if (roleName == "Instructor")
+                    {
+                        var instructor = _context.Instructors.FirstOrDefault(i => i.UserId == user.Id);
+                        if (instructor != null)
+                        {
+                            HttpContext.Session.SetInt32("InstructorId", instructor.Id);
+                        }
+                    }
+
                     if (Headedto != null) return Redirect(Headedto);
                     return RedirectToAction("Index", "Home");
                 }

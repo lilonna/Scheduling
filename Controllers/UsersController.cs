@@ -13,10 +13,10 @@ namespace Scheduling.Controllers
         private readonly IHttpContextAccessor _httpContext;
 
 
-        public UsersController(SchedulingContext context, IHttpContextAccessor httpContext)
+        public UsersController (SchedulingContext context, IHttpContextAccessor httpContext, UserManagement _um)
         {
             _context = context;
-
+            _um = _um;
             _httpContext = httpContext;
         }
         // GET: Users
