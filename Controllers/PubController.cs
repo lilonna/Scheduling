@@ -82,22 +82,17 @@ namespace Scheduling.Controllers
 
                     _um.LoadUserRole(user.Id);
                     _um.setUserBasicInfo(user);
-                    // Get user's role name
+                  
                     var roleName = user.UserRoles
-         .Where(ur => ur.IsActive && !ur.IsDeleted)
-         .Select(ur => ur.Role.Name)
-         .FirstOrDefault();
+                        .Where(ur => ur.IsActive && !ur.IsDeleted)
+                        .Select(ur => ur.Role.Name)
+                        .FirstOrDefault();
 
-                    if (string.IsNullOrEmpty(roleName))
-                    {
-                        TempData["Error"] = "No role assigned to this user. Please contact the system administrator.";
-                        return RedirectToAction("LogIn", "Pub");
-                    }
-
-                    HttpContext.Session.SetString("Role", roleName);
+                   
+                    HttpContext.Session.SetString("Role", roleName ?? string.Empty);
                     HttpContext.Session.SetInt32("UserId", user.Id);
 
-
+                    
                     if (roleName == "Student")
                     {
                         var student = _context.Students.FirstOrDefault(s => s.UserId == user.Id);
@@ -115,6 +110,7 @@ namespace Scheduling.Controllers
                             HttpContext.Session.SetInt32("InstructorId", instructor.Id);
                         }
                     }
+
 
                     if (Headedto != null) return Redirect(Headedto);
                     return RedirectToAction("Index", "Home");
@@ -181,33 +177,13 @@ namespace Scheduling.Controllers
             _context.Users.Add(newUser);
             _context.SaveChanges();
 
-            // Encrypt and update password after getting the UserId
+          
             encryptPassword(newUser.Id, newUser.Password);
-
-            // 👉 Assign Student role
-            var studentRole = _context.Roles.FirstOrDefault(r => r.Name == "Student" && r.IsActive && !r.IsDeleted);
-            if (studentRole != null)
-            {
-                var userRole = new UserRole
-                {
-                    UserId = newUser.Id,
-                    RoleId = studentRole.Id,
-                    IsDefault = true,
-                    IsActive = true,
-                    IsDeleted = false
-                };
-                _context.UserRoles.Add(userRole);
-                _context.SaveChanges();
-            }
-            else
-            {
-                TempData["Error"] = "Student role not found. Please contact the administrator.";
-                return RedirectToAction("SignUp");
-            }
 
             TempData["Success"] = "You have successfully registered!";
             return RedirectToAction("Login");
         }
+
 
         private void encryptPassword(int userId, string password)
         {

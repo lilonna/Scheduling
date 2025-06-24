@@ -43,30 +43,39 @@
                     }
                     else
                     {
-                        if (role == "admin")
+                        switch (role?.ToLower())
                         {
-                            <partial name="Components/menu/_admin" />
-                        }
+                            case "admin":
+                                <partial name="Components/menu/_admin" />
+                                break;
 
-                     
-                        if (role == "Instructor")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyInstructorSchedule">
-                                    <i class="fas fa-calendar-alt me-2"></i> My Teaching Schedule
-                                </a>
-                            </li>
-                        }
-                        else if (role == "Student")
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyStudentSchedule">
-                                    <i class="fas fa-calendar-alt me-2"></i> My Schedule
-                                </a>
-                            </li>
+                            case "instructor":
+                                <ul class="navbar-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyInstructorSchedule">
+                                            <i class="fas fa-calendar-alt me-2"></i> My Teaching Schedule
+                                        </a>
+                                    </li>
+                                </ul>
+                                break;
+
+                            case "student":
+                                <ul class="navbar-nav">
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white fw-bold" asp-controller="Home" asp-action="MyStudentSchedule">
+                                            <i class="fas fa-calendar-alt me-2"></i> My Schedule
+                                        </a>
+                                    </li>
+                                </ul>
+                                break;
+
+                            default:
+                                <partial name="Components/menu/_pub" />
+                                break;
                         }
                     }
                 </div>
+
 
 
 

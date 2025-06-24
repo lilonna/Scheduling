@@ -1,13 +1,16 @@
-﻿<ul class="navbar-nav flex-grow-1 d-flex gap-3 ms-5">
-   
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
-   
-     <li class="nav-item px-2">
+@{
+    int? userId = HttpContextAccessor.HttpContext.Session.GetInt32("UserId");
+}
+
+<ul class="navbar-nav flex-grow-1 d-flex gap-3 ms-5">
+    <li class="nav-item px-2">
         <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
            asp-area="" asp-action="ViewAllSchedulesByInstructor" asp-controller="Home">
-           <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
+            <i class="fas fa-chalkboard-teacher me-2"></i>Instructor Schedules
         </a>
-    </li> 
+    </li>
     <li class="nav-item px-2">
         <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
            asp-area="" asp-action="ViewByBatch" asp-controller="Home">
@@ -20,26 +23,33 @@
             <i class="fas fa-list me-2"></i>View Sections
         </a>
     </li>
- 
-
-    <li class="nav-item px-2">
-      
-    </li>
     <li class="nav-item px-2">
         <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
            asp-area="" asp-controller="pub" asp-action="Contact">
-            <i class="fa fa-address-book me-1"></i> Contact Us
+            <i class="fa fa-address-book me-1"></i>Contact Us
         </a>
     </li>
 </ul>
 
-<ul class="navbar-nav ms-auto">
-    <li class="nav-item px-2">
-        <a class="nav-link text-white btn btn-sm border fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
-           asp-area="" asp-controller="pub" asp-action="LogIn">
-            <i class="fa fa-lock me-1"></i> Log In
-        </a>
-    </li>
-</ul>
-
-
+@if (userId == null)
+{
+    <ul class="navbar-nav ms-auto">
+        <li class="nav-item px-2">
+            <a class="nav-link text-white btn btn-sm border fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
+               asp-area="" asp-controller="pub" asp-action="LogIn">
+                <i class="fa fa-lock me-1"></i> Log In
+            </a>
+        </li>
+    </ul>
+}
+else
+{
+    <ul class="navbar-nav ms-auto d-flex align-items-center">
+        <li class="nav-item">
+            <a class="nav-link text-white btn btn-sm border fw-bold d-flex align-items-center" style="font-size: 18px;"
+               asp-area="" asp-controller="pub" asp-action="LogOut">
+                <i class="fa fa-power-off me-1"></i> Log Out
+            </a>
+        </li>
+    </ul>
+}
