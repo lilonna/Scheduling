@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scheduling.Models;
+using Scheduling.Services;
 using System.Diagnostics;
 
 namespace Scheduling.Controllers
@@ -36,7 +37,6 @@ namespace Scheduling.Controllers
                 var instructorDaySlots = new Dictionary<(int, string), List<TimeSlot>>();
                 var roomSlotMap = new Dictionary<(int roomId, int timeSlotId), bool>();
 
-
                 var groupedAllocations = allocations
                     .GroupBy(a => new { a.InstructorId, a.CourseId })
                     .ToList();
@@ -50,24 +50,9 @@ namespace Scheduling.Controllers
                             instructorSlotMap, sectionSlotMap,
                             instructorHoursMap, sectionDayHoursMap,
                             sectionScheduledDays, instructorDaySlots,
-                            group.ToList(),
-                              roomSlotMap,
-                                departmentToSSID
-                                   
+                            group.ToList(), roomSlotMap, departmentToSSID
                         );
-
-                        if (!assigned)
-                        {
-                            ViewBag.ErrorMessage = $"Unable to schedule course {allocation.Course.Name} for section {allocation.Section.Name}.";
-                            return View("Generated", new List<Schedule>());
-                        }
                     }
-                }
-
-                if (HasScheduleConflicts(newSchedules, allocations))
-                {
-                    ViewBag.ErrorMessage = "Conflict detected! Could not resolve schedule.";
-                    return View("Generated", new List<Schedule>());
                 }
 
                 await ReplaceOldSchedulesAsync(newSchedules);
@@ -78,13 +63,11 @@ namespace Scheduling.Controllers
                     .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
                     .Include(s => s.Allocation).ThenInclude(a => a.Section)
                     .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
-                    .Include(s => s.Allocation) .ThenInclude(a => a.Section)
-                    .ThenInclude(sec => sec.Room)
+                    .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Room)
                     .ToListAsync();
 
                 TempData["SuccessMessage"] = "Schedule generated successfully and saved!";
                 return RedirectToAction("Generated");
-
             }
             catch (Exception ex)
             {
@@ -98,19 +81,19 @@ namespace Scheduling.Controllers
         }
 
         private bool TryAssignSchedule(
-      Allocation allocation,
-      List<TimeSlot> orderedSlots,
-      List<Schedule> newSchedules,
-      Dictionary<(int, int), bool> instructorSlotMap,
-      Dictionary<(int, int), bool> sectionSlotMap,
-      Dictionary<int, int> instructorHoursMap,
-      Dictionary<(int, string), int> sectionDayHoursMap,
-      Dictionary<int, HashSet<string>> sectionScheduledDays,
-      Dictionary<(int, string), List<TimeSlot>> instructorDaySlots,
-      List<Allocation> sameCourseGroup,
-      Dictionary<(int roomId, int timeSlotId), bool> roomSlotMap,
-      Dictionary<int, int> departmentToSSID
-  )
+            Allocation allocation,
+            List<TimeSlot> orderedSlots,
+            List<Schedule> newSchedules,
+            Dictionary<(int, int), bool> instructorSlotMap,
+            Dictionary<(int, int), bool> sectionSlotMap,
+            Dictionary<int, int> instructorHoursMap,
+            Dictionary<(int, string), int> sectionDayHoursMap,
+            Dictionary<int, HashSet<string>> sectionScheduledDays,
+            Dictionary<(int, string), List<TimeSlot>> instructorDaySlots,
+            List<Allocation> sameCourseGroup,
+            Dictionary<(int roomId, int timeSlotId), bool> roomSlotMap,
+            Dictionary<int, int> departmentToSSID
+        )
         {
             var instructorId = allocation.InstructorId;
             var sectionId = allocation.SectionId;
@@ -145,7 +128,6 @@ namespace Scheduling.Controllers
                     score *= creditHour;
                 }
 
-             
                 if (sameCourseGroup.Count > 1)
                 {
                     var sameDaySchedules = newSchedules
@@ -166,70 +148,102 @@ namespace Scheduling.Controllers
 
             foreach (var ts in prioritizedSlots)
             {
-                var timeSlotId = ts.Id;
-                var day = ts.DaysOfWeek.Name;
+                if (TryPlaceSchedule(ts, allocation, orderedSlots, newSchedules, instructorSlotMap, sectionSlotMap,
+                    instructorHoursMap, sectionDayHoursMap, sectionScheduledDays, instructorDaySlots,
+                    roomSlotMap, departmentToSSID))
+                    return true;
+            }
 
-                if (instructorSlotMap.ContainsKey((instructorId, timeSlotId)) ||
-                    sectionSlotMap.ContainsKey((sectionId, timeSlotId)))
-                    continue;
-
-                var currentIHours = instructorHoursMap.TryGetValue(instructorId, out var iHrs) ? iHrs : 0;
-                var currentSDHours = sectionDayHoursMap.TryGetValue((sectionId, day), out var sHrs) ? sHrs : 0;
-
-                if (currentIHours + creditHour > MaxTeachingLoad ||
-                    currentSDHours + creditHour > MaxLearningHoursPerDay)
-                    continue;
-
-                var has5Days = sectionScheduledDays[sectionId].Count >= 5;
-                var isNewDay = !sectionScheduledDays[sectionId].Contains(day);
-                if (has5Days && isNewDay) continue;
-
-                int? assignedRoomId = allocation.Section.RoomId;
-                if (assignedRoomId != null && roomSlotMap.ContainsKey(((int)assignedRoomId, timeSlotId)))
-                {
-                    
-                    assignedRoomId = _context.Rooms
-                        .AsNoTracking()
-                        .ToList()
-                        .FirstOrDefault(r => !roomSlotMap.ContainsKey((r.Id, timeSlotId)))?.Id;
-
-                    if (assignedRoomId == null)
-                        return false; 
-                }
-
-                
-                newSchedules.Add(new Schedule
-                {
-                    AllocationId = allocation.Id,
-                    TimeSlotId = timeSlotId,
-                    RoomId = assignedRoomId,
-                    Ssid = departmentToSSID[allocation.Section.DepartmentId]
-                });
-                roomSlotMap[((int) assignedRoomId, timeSlotId)] = true;
-
-
-                instructorSlotMap[(instructorId, timeSlotId)] = true;
-                sectionSlotMap[(sectionId, timeSlotId)] = true;
-                instructorHoursMap[instructorId] = currentIHours + creditHour;
-                sectionDayHoursMap[(sectionId, day)] = currentSDHours + creditHour;
-                sectionScheduledDays[sectionId].Add(day);
-
-                if (!instructorDaySlots.ContainsKey((instructorId, day)))
-                    instructorDaySlots[(instructorId, day)] = new();
-                instructorDaySlots[(instructorId, day)].Add(ts);
-
-                return true;  
+            // fallback to any available slot
+            foreach (var ts in orderedSlots)
+            {
+                if (TryPlaceSchedule(ts, allocation, orderedSlots, newSchedules, instructorSlotMap, sectionSlotMap,
+                    instructorHoursMap, sectionDayHoursMap, sectionScheduledDays, instructorDaySlots,
+                    roomSlotMap, departmentToSSID))
+                    return true;
             }
 
             return false;
         }
+
+        private bool TryPlaceSchedule(
+            TimeSlot ts,
+            Allocation allocation,
+            List<TimeSlot> orderedSlots,
+            List<Schedule> newSchedules,
+            Dictionary<(int, int), bool> instructorSlotMap,
+            Dictionary<(int, int), bool> sectionSlotMap,
+            Dictionary<int, int> instructorHoursMap,
+            Dictionary<(int, string), int> sectionDayHoursMap,
+            Dictionary<int, HashSet<string>> sectionScheduledDays,
+            Dictionary<(int, string), List<TimeSlot>> instructorDaySlots,
+            Dictionary<(int roomId, int timeSlotId), bool> roomSlotMap,
+            Dictionary<int, int> departmentToSSID)
+        {
+            var instructorId = allocation.InstructorId;
+            var sectionId = allocation.SectionId;
+            var creditHour = allocation.Course.CreditHour;
+            var timeSlotId = ts.Id;
+            var day = ts.DaysOfWeek.Name;
+
+            if (instructorSlotMap.ContainsKey((instructorId, timeSlotId)) ||
+                sectionSlotMap.ContainsKey((sectionId, timeSlotId)))
+                return false;
+
+            var currentIHours = instructorHoursMap.TryGetValue(instructorId, out var iHrs) ? iHrs : 0;
+            var currentSDHours = sectionDayHoursMap.TryGetValue((sectionId, day), out var sHrs) ? sHrs : 0;
+
+            if (currentIHours + creditHour > MaxTeachingLoad ||
+                currentSDHours + creditHour > MaxLearningHoursPerDay)
+                return false;
+
+            var has5Days = sectionScheduledDays[sectionId].Count >= 5;
+            var isNewDay = !sectionScheduledDays[sectionId].Contains(day);
+            if (has5Days && isNewDay) return false;
+
+            int? assignedRoomId = allocation.Section.RoomId;
+            if (assignedRoomId != null && roomSlotMap.ContainsKey(((int)assignedRoomId, timeSlotId)))
+            {
+                assignedRoomId = _context.Rooms
+                    .AsNoTracking()
+                    .ToList()
+                    .FirstOrDefault(r => !roomSlotMap.ContainsKey((r.Id, timeSlotId)))?.Id;
+
+                if (assignedRoomId == null)
+                    return false;
+            }
+
+            if (!departmentToSSID.TryGetValue(allocation.Section.DepartmentId, out var ssid))
+                return false;
+
+            newSchedules.Add(new Schedule
+            {
+                AllocationId = allocation.Id,
+                TimeSlotId = timeSlotId,
+                RoomId = assignedRoomId,
+                Ssid = ssid
+            });
+
+            roomSlotMap[((int)assignedRoomId, timeSlotId)] = true;
+            instructorSlotMap[(instructorId, timeSlotId)] = true;
+            sectionSlotMap[(sectionId, timeSlotId)] = true;
+            instructorHoursMap[instructorId] = currentIHours + creditHour;
+            sectionDayHoursMap[(sectionId, day)] = currentSDHours + creditHour;
+            sectionScheduledDays[sectionId].Add(day);
+
+            if (!instructorDaySlots.ContainsKey((instructorId, day)))
+                instructorDaySlots[(instructorId, day)] = new();
+            instructorDaySlots[(instructorId, day)].Add(ts);
+
+            return true;
+        }
+
         private async Task<List<Allocation>> GetAllocationsAsync()
         {
             return await _context.Allocations
                 .Include(a => a.Course)
                 .Include(a => a.Instructor)
-                  .Include(a => a.Section)
-            .ThenInclude(sec => sec.Batch)
+                .Include(a => a.Section).ThenInclude(sec => sec.Batch)
                 .Include(a => a.Section).ThenInclude(sec => sec.Department)
                 .AsNoTracking()
                 .OrderBy(a => a.Instructor.FullName).ThenBy(a => a.Course.Name)
@@ -261,8 +275,10 @@ namespace Scheduling.Controllers
             await _context.Schedules.AddRangeAsync(newSchedules);
             await _context.SaveChangesAsync();
         }
+    
 
-        [HttpGet]
+
+    [HttpGet]
         public async Task<IActionResult> Generated()
         {
             var schedules = await _context.Schedules
@@ -344,30 +360,63 @@ public IActionResult SelectBatch()
             if (instructorId == null) return Unauthorized();
 
             var schedules = await _context.Schedules
-                .Include(s => s.TimeSlot)
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Course)
-                .Include(s => s.Allocation.Section)
+                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                .Include(s => s.Allocation).ThenInclude(a => a.Course)
+                .Include(s => s.Allocation).ThenInclude(a => a.Section)
+                .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
                 .Where(s => s.Allocation.InstructorId == instructorId)
                 .ToListAsync();
 
-            return View("AllInstructorSchedules", schedules); 
+            var grouped = new[]
+            {
+        new
+        {
+            Instructor = schedules.FirstOrDefault()?.Allocation?.Instructor,
+            Schedules = schedules
         }
+    };
+
+            return View("ViewAllSchedulesByInstructor", grouped);
+        }
+
         public async Task<IActionResult> MyStudentSchedule()
         {
             var sectionId = HttpContext.Session.GetInt32("SectionId");
             if (sectionId == null) return Unauthorized();
 
             var schedules = await _context.Schedules
-                .Include(s => s.TimeSlot)
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Course)
-                .Include(s => s.Allocation.Instructor)
+                .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
+                .Include(s => s.Allocation).ThenInclude(a => a.Course)
+                .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
+                .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Batch)
                 .Where(s => s.Allocation.SectionId == sectionId)
                 .ToListAsync();
 
-            return View("ViewBySection", schedules); 
+            if (!schedules.Any()) return View("ViewBySection", new List<dynamic>()); // fallback
+
+            var section = schedules.First().Allocation.Section;
+            var batch = section.Batch;
+
+            var result = new[]
+            {
+        new
+        {
+            Id = batch.Id,
+            Name = batch.Name,
+            Sections = new[]
+            {
+                new
+                {
+                    Section = section,
+                    Schedules = schedules
+                }
+            }
         }
+    };
+
+            return View("ViewBySection", result);
+        }
+
 
 
         public IActionResult ViewBySection()
@@ -505,7 +554,15 @@ public IActionResult SelectBatch()
             return Json(schedules);
         }
 
-     
+        [HttpPost]
+        public async Task<IActionResult> SeedData()
+        {
+            await DataSeeder.SeedFullDataAsync(HttpContext.RequestServices);
+            TempData["Success"] = "Seeding complete!";
+            return RedirectToAction("Index");
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
