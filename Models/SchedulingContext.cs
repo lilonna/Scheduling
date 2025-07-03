@@ -15,6 +15,8 @@ public partial class SchedulingContext : DbContext
     {
     }
 
+    public virtual DbSet<AdmissionType> AdmissionTypes { get; set; }
+
     public virtual DbSet<Allocation> Allocations { get; set; }
 
     public virtual DbSet<Batch> Batchs { get; set; }
@@ -32,6 +34,8 @@ public partial class SchedulingContext : DbContext
     public virtual DbSet<Gender> Genders { get; set; }
 
     public virtual DbSet<Instructor> Instructors { get; set; }
+
+    public virtual DbSet<Program> Programs { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -60,6 +64,11 @@ public partial class SchedulingContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AdmissionType>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
         modelBuilder.Entity<Allocation>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Allocation");
@@ -82,6 +91,14 @@ public partial class SchedulingContext : DbContext
         modelBuilder.Entity<Batch>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.AdmissionTypes).WithMany(p => p.Batches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Batchs_AdmissionTypes");
+
+            entity.HasOne(d => d.Programs).WithMany(p => p.Batches)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Batchs_Programs");
         });
 
         modelBuilder.Entity<Block>(entity =>
@@ -120,6 +137,11 @@ public partial class SchedulingContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_floors");
 
+            entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<Program>(entity =>
+        {
             entity.Property(e => e.Id).ValueGeneratedNever();
         });
 
