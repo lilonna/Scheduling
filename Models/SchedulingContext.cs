@@ -31,6 +31,8 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<Department> Departments { get; set; }
 
+    public virtual DbSet<DepartmentAdmin> DepartmentAdmins { get; set; }
+
     public virtual DbSet<Gender> Genders { get; set; }
 
     public virtual DbSet<Instructor> Instructors { get; set; }
@@ -126,6 +128,19 @@ public partial class SchedulingContext : DbContext
         modelBuilder.Entity<Department>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<DepartmentAdmin>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.Department).WithMany(p => p.DepartmentAdmins)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DepartmentAdmins_Departments");
+
+            entity.HasOne(d => d.User).WithMany(p => p.DepartmentAdmins)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DepartmentAdmins_Users");
         });
 
         modelBuilder.Entity<Gender>(entity =>

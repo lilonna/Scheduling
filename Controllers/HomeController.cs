@@ -18,8 +18,7 @@ namespace Scheduling.Controllers
             _logger = logger;
             _context = context;
         }
-
-        public async Task<IActionResult> Generate()
+  public async Task<IActionResult> Generate()
         {
             try
             {
@@ -145,8 +144,7 @@ namespace Scheduling.Controllers
 
                 return score;
             }).ToList();
-
-            foreach (var ts in prioritizedSlots)
+foreach (var ts in prioritizedSlots)
             {
                 if (TryPlaceSchedule(ts, allocation, orderedSlots, newSchedules, instructorSlotMap, sectionSlotMap,
                     instructorHoursMap, sectionDayHoursMap, sectionScheduledDays, instructorDaySlots,
@@ -353,8 +351,7 @@ public IActionResult SelectBatch()
         }
 
 
-
-        public async Task<IActionResult> MyInstructorSchedule()
+ public async Task<IActionResult> MyInstructorSchedule()
         {
             var instructorId = HttpContext.Session.GetInt32("InstructorId");
             if (instructorId == null) return Unauthorized();
@@ -643,7 +640,7 @@ public IActionResult SelectBatch()
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("ViewAllSchedulesByInstructor");
+            return Json(new { success = true });
         }
 
       

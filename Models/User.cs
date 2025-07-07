@@ -51,6 +51,9 @@ public partial class User
 
     public bool IsDeleted { get; set; }
 
+    [InverseProperty("User")]
+    public virtual ICollection<DepartmentAdmin> DepartmentAdmins { get; set; } = new List<DepartmentAdmin>();
+
     [ForeignKey("GenderId")]
     [InverseProperty("Users")]
     public virtual Gender Gender { get; set; } = null!;
