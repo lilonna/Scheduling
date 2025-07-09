@@ -48,7 +48,6 @@ public partial class User
     public int? DefaultLanguageId { get; set; }
 
     public bool IsActive { get; set; }
-
     public bool IsDeleted { get; set; }
 
     [InverseProperty("User")]

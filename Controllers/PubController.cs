@@ -92,7 +92,20 @@ namespace Scheduling.Controllers
                     HttpContext.Session.SetString("Role", roleName ?? string.Empty);
                     HttpContext.Session.SetInt32("UserId", user.Id);
 
-                    
+                    // If DepartmentAdmin, store DepartmentId into session
+                    if (roleName == "DepartmentAdmin")
+                    {
+                        var departmentAdmin = _context.DepartmentAdmins
+                            .FirstOrDefault(da => da.UserId == user.Id);
+
+                        if (departmentAdmin != null)
+                        {
+                            HttpContext.Session.SetInt32("DepartmentId", departmentAdmin.DepartmentId);
+                        }
+                    }
+
+
+
                     if (roleName == "Student")
                     {
                         var student = _context.Students.FirstOrDefault(s => s.UserId == user.Id);

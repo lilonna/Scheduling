@@ -15,6 +15,14 @@
 </section>
 
 
-@*   <form asp-controller="Home" asp-action="SeedData" method="post">
+@*    <form asp-controller="Home" asp-action="SeedData" method="post">
       <button type="submit" class="btn btn-warning">Run Seeder</button>
-  </form> *@
+  </form> 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+} *@

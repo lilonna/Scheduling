@@ -20,9 +20,17 @@ namespace Scheduling.Controllers
         }
   public async Task<IActionResult> Generate()
         {
+            int? departmentIdNullable = HttpContext.Session.GetInt32("DepartmentId");
+            if (departmentIdNullable == null)
+            {
+                TempData["ErrorMessage"] = "You are not assigned to any department.";
+                return RedirectToAction("Index");
+            }
+            int departmentId = departmentIdNullable.Value; 
+
             try
             {
-                var allocations = await GetAllocationsAsync();
+                var allocations = await GetAllocationsAsync(departmentId);
                 var orderedSlots = await GetOrderedTimeSlotsAsync();
                 var scheduleSettings = await _context.ScheduleSettings.ToListAsync();
                 var departmentToSSID = scheduleSettings.ToDictionary(ss => ss.DepartmentId, ss => ss.Id);
@@ -54,13 +62,16 @@ namespace Scheduling.Controllers
                     }
                 }
 
-                await ReplaceOldSchedulesAsync(newSchedules);
+                await ReplaceOldSchedulesAsync(newSchedules, departmentId);
+
 
                 var finalSchedules = await _context.Schedules
                     .Include(s => s.Room)
                     .Include(s => s.Allocation).ThenInclude(a => a.Course)
                     .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
                     .Include(s => s.Allocation).ThenInclude(a => a.Section)
+                    .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Department).Where(a => a.Allocation.Section.DepartmentId == departmentId)
+
                     .Include(s => s.TimeSlot).ThenInclude(ts => ts.DaysOfWeek)
                     .Include(s => s.Allocation).ThenInclude(a => a.Section).ThenInclude(sec => sec.Room)
                     .ToListAsync();
@@ -78,7 +89,16 @@ namespace Scheduling.Controllers
                 return View("Generated", new List<Schedule>());
             }
         }
+        private int? GetCurrentUserDepartmentId()
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return null;
 
+            return _context.DepartmentAdmins
+                .Where(d => d.UserId == userId)
+                .Select(d => (int?)d.DepartmentId)
+                .FirstOrDefault();
+        }
         private bool TryAssignSchedule(
             Allocation allocation,
             List<TimeSlot> orderedSlots,
@@ -163,7 +183,6 @@ foreach (var ts in prioritizedSlots)
 
             return false;
         }
-
         private bool TryPlaceSchedule(
             TimeSlot ts,
             Allocation allocation,
@@ -235,8 +254,7 @@ foreach (var ts in prioritizedSlots)
 
             return true;
         }
-
-        private async Task<List<Allocation>> GetAllocationsAsync()
+        private async Task<List<Allocation>> GetAllocationsAsync(int departmentId)
         {
             return await _context.Allocations
                 .Include(a => a.Course)
@@ -244,40 +262,38 @@ foreach (var ts in prioritizedSlots)
                 .Include(a => a.Section).ThenInclude(sec => sec.Batch)
                 .Include(a => a.Section).ThenInclude(sec => sec.Department)
                 .AsNoTracking()
+                .Where(a => a.Section.DepartmentId == departmentId) 
                 .OrderBy(a => a.Instructor.FullName).ThenBy(a => a.Course.Name)
                 .ToListAsync();
         }
-
         private async Task<List<TimeSlot>> GetOrderedTimeSlotsAsync()
         {
             var slots = await _context.TimeSlots.Include(ts => ts.DaysOfWeek).AsNoTracking().ToListAsync();
             return slots.OrderBy(ts => ts.DaysOfWeek.Id).ThenBy(ts => ts.From).ToList();
         }
-
         private bool HasScheduleConflicts(List<Schedule> schedules, List<Allocation> allocations)
         {
             return schedules
                 .GroupBy(s => new { s.TimeSlotId, InstructorId = allocations.First(a => a.Id == s.AllocationId).InstructorId })
                 .Any(g => g.Count() > 1);
         }
-
-        private async Task ReplaceOldSchedulesAsync(List<Schedule> newSchedules)
+        private async Task ReplaceOldSchedulesAsync(List<Schedule> newSchedules, int departmentId)
         {
-            var old = await _context.Schedules.AsNoTracking().ToListAsync();
-            foreach (var schedule in old)
-            {
-                _context.Entry(schedule).State = EntityState.Deleted;
-            }
+           
+            var oldSchedules = await _context.Schedules
+                .Include(s => s.Allocation).ThenInclude(a => a.Section)
+                .Where(s => s.Allocation.Section.DepartmentId == departmentId)
+                .ToListAsync();
+
+            _context.Schedules.RemoveRange(oldSchedules);
             await _context.SaveChangesAsync();
 
             await _context.Schedules.AddRangeAsync(newSchedules);
             await _context.SaveChangesAsync();
         }
-    
 
-
-    [HttpGet]
-        public async Task<IActionResult> Generated()
+        [HttpGet]
+public async Task<IActionResult> Generated()
         {
             var schedules = await _context.Schedules
                 .Include(s => s.Room)
@@ -295,7 +311,7 @@ public IActionResult SelectBatch()
             var batches = _context.Batchs.ToList(); 
             return View(batches);
         }
-        public IActionResult ViewSectionByBatch(int batchId, int departmentId)
+public IActionResult ViewSectionByBatch(int batchId, int departmentId)
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
@@ -336,9 +352,8 @@ public IActionResult SelectBatch()
 
             return View("ViewBySection", groupedSchedules);
         }
-
         [HttpGet]
-        public IActionResult GetDepartmentsByBatch(int batchId)
+public IActionResult GetDepartmentsByBatch(int batchId)
         {
             var departments = _context.Sections
                 .Where(s => s.BatchId == batchId)
@@ -349,8 +364,6 @@ public IActionResult SelectBatch()
 
             return Json(departments);
         }
-
-
  public async Task<IActionResult> MyInstructorSchedule()
         {
             var instructorId = HttpContext.Session.GetInt32("InstructorId");
@@ -375,8 +388,7 @@ public IActionResult SelectBatch()
 
             return View("ViewAllSchedulesByInstructor", grouped);
         }
-
-        public async Task<IActionResult> MyStudentSchedule()
+ public async Task<IActionResult> MyStudentSchedule()
         {
             var sectionId = HttpContext.Session.GetInt32("SectionId");
             if (sectionId == null) return Unauthorized();
@@ -409,14 +421,11 @@ public IActionResult SelectBatch()
                 }
             }
         }
-    };
+            };
 
             return View("ViewBySection", result);
         }
-
-
-
-        public IActionResult ViewBySection()
+public IActionResult ViewBySection()
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
@@ -454,7 +463,7 @@ public IActionResult SelectBatch()
 
             return View("ViewBySection", groupedSchedules);
         }
-        public IActionResult ViewByBatch(int scheduleSettingId)
+public IActionResult ViewByBatch(int scheduleSettingId)
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
@@ -468,7 +477,7 @@ public IActionResult SelectBatch()
 
             return View(schedules);
         }
-        public IActionResult ViewAllSchedulesByInstructor()
+public IActionResult ViewAllSchedulesByInstructor()
         {
             var schedules = _context.Schedules
                 .Include(s => s.Allocation)
@@ -497,7 +506,7 @@ public IActionResult SelectBatch()
             return View(groupedSchedules);
         }
         [HttpPost]
-        public async Task<IActionResult> Regenerate()
+public async Task<IActionResult> Regenerate()
         {
 
             var schedules = await _context.Schedules.ToListAsync();
@@ -508,7 +517,7 @@ public IActionResult SelectBatch()
             return await Generate();
         }
         [HttpPost]
-        public async Task<IActionResult> ClearAllSchedules()
+public async Task<IActionResult> ClearAllSchedules()
         {
             var schedules = await _context.Schedules.ToListAsync();
             _context.Schedules.RemoveRange(schedules);
@@ -518,11 +527,8 @@ public IActionResult SelectBatch()
             return RedirectToAction("Generated");
         }
 
-
-
-
         [HttpGet]
-        public async Task<IActionResult> GetSchedulesBySection(int scheduleId)
+public async Task<IActionResult> GetSchedulesBySection(int scheduleId)
         {
             var schedule = await _context.Schedules
                 .Include(s => s.Allocation)
@@ -552,16 +558,23 @@ public IActionResult SelectBatch()
         }
 
         [HttpPost]
-        public async Task<IActionResult> SeedData()
+public async Task<IActionResult> SeedData()
         {
-            await DataSeeder.SeedFullDataAsync(HttpContext.RequestServices);
-            TempData["Success"] = "Seeding complete!";
+            try
+            {
+                await DataSeeder.SeedFullDataAsync(HttpContext.RequestServices);
+                TempData["Success"] = " Seeding complete!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $" Seeding failed: {ex.Message}";
+            }
+
             return RedirectToAction("Index");
         }
 
-
         [HttpPost]
-        public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
+public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
             var schedule1 = await _context.Schedules
                 .Include(s => s.Allocation)
@@ -643,10 +656,8 @@ public IActionResult SelectBatch()
             return Json(new { success = true });
         }
 
-      
-
         [HttpPost]
-        public IActionResult GenerateSectionRoomAssignments()
+public IActionResult GenerateSectionRoomAssignments()
         {
             var sections = _context.Sections
                 .Where(s => s.RoomId == null) 
@@ -677,7 +688,7 @@ public IActionResult SelectBatch()
             return RedirectToAction("ViewSectionRoomAssignments");
 
         }
-        public IActionResult ViewSectionRoomAssignments()
+public IActionResult ViewSectionRoomAssignments()
         {
             var sectionRooms = _context.Sections
                 .Include(s => s.Room)
@@ -687,7 +698,7 @@ public IActionResult SelectBatch()
 
             return View(sectionRooms);
         }
-        private async Task<bool> CheckInstructorConflicts(int instructorId)
+private async Task<bool> CheckInstructorConflicts(int instructorId)
         {
             var instructorSchedules = await _context.Schedules
                 .Include(s => s.TimeSlot)
@@ -712,68 +723,89 @@ public IActionResult SelectBatch()
             }
             return false;
         }
-        private bool TimeOverlaps(DateTime start1, DateTime end1, DateTime start2, DateTime end2)
+private bool TimeOverlaps(DateTime start1, DateTime end1, DateTime start2, DateTime end2)
         {
             return (start1 < end2) && (start2 < end1);
         }
 
-
-
-
         [HttpPost]
-        public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId, int newInstructorId)
+public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId, int newInstructorId)
         {
-            // Find existing allocation
+            var departmentId = GetCurrentUserDepartmentId();
+            if (departmentId == null)
+            {
+                TempData["ErrorMessage"] = "You are not assigned to any department.";
+                return RedirectToAction("Generated");
+            }
             var existingAllocation = await _context.Allocations
-                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
+                .Include(a => a.Section)
+                .FirstOrDefaultAsync(a =>
+                    a.SectionId == sectionId &&
+                    a.CourseId == courseId &&
+                    a.Section.DepartmentId == departmentId);
 
             if (existingAllocation == null)
             {
-                ViewBag.Error = "Allocation not found for the given section and course.";
+                TempData["ErrorMessage"] = "Allocation not found or you do not have permission.";
                 return RedirectToAction("Generated");
             }
 
-            //  Update only the instructor
-            existingAllocation.InstructorId = newInstructorId;
+            bool instructorValid = await _context.Allocations
+       .AnyAsync(a =>
+           a.InstructorId == newInstructorId &&
+           a.Section.DepartmentId == departmentId);
 
+
+            if (!instructorValid)
+            {
+                TempData["ErrorMessage"] = "Instructor is not valid for your department.";
+                return RedirectToAction("Generated");
+            }
+
+            existingAllocation.InstructorId = newInstructorId;
             _context.Allocations.Update(existingAllocation);
             await _context.SaveChangesAsync();
 
-            //  Check for schedule conflicts after reassignment
             bool hasConflict = await CheckInstructorConflicts(newInstructorId);
-
             if (hasConflict)
             {
-                ViewBag.Warning = "Warning: The new instructor has conflicting schedules. Please review.";
+                TempData["WarningMessage"] = "Instructor reassigned, but there may be schedule conflicts.";
             }
             else
             {
-                ViewBag.Success = "Instructor reassigned successfully without conflicts.";
+                TempData["SuccessMessage"] = "Instructor reassigned successfully.";
             }
 
             return RedirectToAction("ViewAllocations");
         }
 
-
         [HttpGet]
-        public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId)
+public async Task<IActionResult> ReassignInstructor(int sectionId, int courseId)
         {
-            // Load list of instructors for dropdown
-            var instructors = await _context.Instructors.ToListAsync();
-
-            // Load allocation (just for verification, optional)
+            var departmentId = GetCurrentUserDepartmentId();
+            if (departmentId == null)
+            {
+                TempData["ErrorMessage"] = "You are not assigned to any department.";
+                return RedirectToAction("Generated");
+            }
             var allocation = await _context.Allocations
                 .Include(a => a.Course)
                 .Include(a => a.Section)
-                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId);
+                .FirstOrDefaultAsync(a => a.SectionId == sectionId && a.CourseId == courseId && a.Section.DepartmentId == departmentId);
 
             if (allocation == null)
             {
-                ViewBag.Error = "Allocation not found.";
+                TempData["ErrorMessage"] = "Allocation not found or access denied.";
                 return RedirectToAction("Generated");
             }
 
-            // Pass data to ViewBag
+            var instructors = await _context.Allocations
+          .Where(a => a.Section.DepartmentId == departmentId)
+          .Select(a => a.Instructor)
+          .Distinct()
+          .ToListAsync();
+
+
             ViewBag.SectionId = sectionId;
             ViewBag.CourseId = courseId;
             ViewBag.CourseName = allocation.Course.Name;
@@ -783,14 +815,21 @@ public IActionResult SelectBatch()
             return View();
         }
 
-
         [HttpGet]
-        public async Task<IActionResult> ViewAllocations(string searchInstructor)
+public async Task<IActionResult> ViewAllocations(string searchInstructor)
         {
+            var departmentId = GetCurrentUserDepartmentId();
+            if (departmentId == null)
+            {
+                TempData["ErrorMessage"] = "You are not assigned to any department.";
+                return RedirectToAction("Index");
+            }
+
             var allocationsQuery = _context.Allocations
                 .Include(a => a.Course)
-                .Include(a => a.Section)
+                .Include(a => a.Section).ThenInclude(s => s.Department)
                 .Include(a => a.Instructor)
+                .Where(a => a.Section.DepartmentId == departmentId)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchInstructor))
@@ -802,22 +841,26 @@ public IActionResult SelectBatch()
             var allocations = await allocationsQuery.ToListAsync();
 
             ViewBag.SearchInstructor = searchInstructor;
-            ViewBag.Instructors = await _context.Instructors.ToListAsync();
+            ViewBag.Instructors = await _context.Allocations
+                                      .Where(a => a.Section.DepartmentId == departmentId)
+                                      .Select(a => a.Instructor)
+                                      .Distinct()
+                                      .ToListAsync();
+
+
             return View(allocations);
         }
 
-
-
-        public IActionResult Index()
+public IActionResult Index()
         {
             return View();
         }
-        public IActionResult Privacy()
+public IActionResult Privacy()
         {
             return View();
         }
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }

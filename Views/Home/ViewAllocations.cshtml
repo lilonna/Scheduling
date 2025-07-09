@@ -13,6 +13,7 @@
 <table class="table table-bordered">
     <thead>
         <tr>
+            <th>Department</th>
             <th>Course</th>
             <th>Section</th>
             <th>Instructor</th>
@@ -23,6 +24,7 @@
         @foreach (var allocation in Model)
         {
             <tr>
+                <td>@allocation.Section.Department.Name</td>
                 <td>@allocation.Course.Name</td>
                 <td>@allocation.Section.Name</td>
                 <td>@allocation.Instructor.FullName</td>
