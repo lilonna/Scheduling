@@ -656,39 +656,104 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
             return Json(new { success = true });
         }
 
+        //        [HttpPost]
+        //public IActionResult GenerateSectionRoomAssignments()
+        //        {
+        //            var sections = _context.Sections
+        //                .Where(s => s.RoomId == null) 
+        //                .OrderBy(s => s.Name)
+        //                .ToList();
+
+        //            var rooms = _context.Rooms
+        //                .OrderBy(r => r.RoomNumber)
+        //                .ToList();
+
+        //            if (!rooms.Any())
+        //            {
+        //                TempData["Error"] = "No rooms available. Please create rooms first.";
+        //                return RedirectToAction("Index");
+        //            }
+
+        //            int roomIndex = 0;
+        //            foreach (var section in sections)
+        //            {
+        //                section.RoomId = rooms[roomIndex].Id;
+
+
+        //                roomIndex = (roomIndex + 1) % rooms.Count;
+        //            }
+
+        //            _context.SaveChanges();
+        //            TempData["Success"] = "Room assignments generated successfully.";
+        //            return RedirectToAction("ViewSectionRoomAssignments");
+
+        //        }
+
         [HttpPost]
-public IActionResult GenerateSectionRoomAssignments()
+        public async Task<IActionResult> GenerateSectionRoomAssignments()
         {
-            var sections = _context.Sections
-                .Where(s => s.RoomId == null) 
+            var departmentId = GetCurrentUserDepartmentId();
+            if (departmentId == null)
+            {
+                TempData["Error"] = "You are not assigned to any department.";
+                return RedirectToAction("Index");
+            }
+
+            // 1. Get all unassigned sections for this department
+            var unassignedSections = await _context.Sections
+                .Where(s => s.DepartmentId == departmentId && s.RoomId == null)
                 .OrderBy(s => s.Name)
-                .ToList();
+                .ToListAsync();
 
-            var rooms = _context.Rooms
-                .OrderBy(r => r.RoomNumber)
-                .ToList();
+            if (!unassignedSections.Any())
+            {
+                TempData["Info"] = "All sections in your department are already assigned to rooms.";
+                return RedirectToAction("ViewSectionRoomAssignments");
+            }
 
-            if (!rooms.Any())
+            // 2. Get blocks already used by the department
+            var usedBlockIds = await _context.Sections
+                .Where(s => s.DepartmentId == departmentId && s.RoomId != null)
+                .Select(s => s.Room!.BlockId)
+                .Distinct()
+                .ToListAsync();
+
+            // 3. Get rooms in preferred blocks (already used) first, then the rest
+            var preferredRooms = await _context.Rooms
+                .Where(r => usedBlockIds.Contains(r.BlockId))
+                .OrderBy(r => r.Block.Name)
+                .ThenBy(r => r.RoomNumber)
+                .ToListAsync();
+
+            var otherRooms = await _context.Rooms
+                .Where(r => !usedBlockIds.Contains(r.BlockId))
+                .OrderBy(r => r.Block.Name)
+                .ThenBy(r => r.RoomNumber)
+                .ToListAsync();
+
+            var allRooms = preferredRooms.Concat(otherRooms).ToList();
+
+            if (!allRooms.Any())
             {
                 TempData["Error"] = "No rooms available. Please create rooms first.";
                 return RedirectToAction("Index");
             }
 
+            // 4. Assign rooms to sections in a round-robin fashion
             int roomIndex = 0;
-            foreach (var section in sections)
+            foreach (var section in unassignedSections)
             {
-                section.RoomId = rooms[roomIndex].Id;
-
-              
-                roomIndex = (roomIndex + 1) % rooms.Count;
+                section.RoomId = allRooms[roomIndex].Id;
+                roomIndex = (roomIndex + 1) % allRooms.Count;
             }
 
-            _context.SaveChanges();
-            TempData["Success"] = "Room assignments generated successfully.";
-            return RedirectToAction("ViewSectionRoomAssignments");
+            await _context.SaveChangesAsync();
 
+            TempData["Success"] = $"Room assignments generated for {unassignedSections.Count} section(s) in your department.";
+            return RedirectToAction("ViewSectionRoomAssignments");
         }
-public IActionResult ViewSectionRoomAssignments()
+
+        public IActionResult ViewSectionRoomAssignments()
         {
             var sectionRooms = _context.Sections
                 .Include(s => s.Room)
