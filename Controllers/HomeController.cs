@@ -83,7 +83,7 @@ namespace Scheduling.Controllers
             {
                 var trackerLog = string.Join("\n", _context.ChangeTracker.Entries()
                     .Select(entry => $"Entity: {entry.Entity.GetType().Name}, State: {entry.State}"));
-
+                ViewBag.CurrentUserDepartmentId = GetCurrentUserDepartmentId();
                 ViewBag.TrackerLog = trackerLog;
                 ViewBag.ErrorMessage = $"Error: {ex.Message}";
                 return View("Generated", new List<Schedule>());
@@ -349,6 +349,7 @@ public IActionResult ViewSectionByBatch(int batchId, int departmentId)
                         .ToList()
                 })
                 .ToList();
+            ViewBag.CurrentUserDepartmentId = GetCurrentUserDepartmentId();
 
             return View("ViewBySection", groupedSchedules);
         }
@@ -460,6 +461,7 @@ public IActionResult ViewBySection()
                         .ToList()
                 })
                 .ToList();
+            ViewBag.CurrentUserDepartmentId = GetCurrentUserDepartmentId();
 
             return View("ViewBySection", groupedSchedules);
         }
@@ -574,25 +576,43 @@ public async Task<IActionResult> SeedData()
         }
 
         [HttpPost]
-public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
+        public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
         {
+            var currentDepartmentId = GetCurrentUserDepartmentId();
+            if (currentDepartmentId == null)
+            {
+                return Unauthorized("You are not authorized to perform this action.");
+            }
+
             var schedule1 = await _context.Schedules
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(t => t.DaysOfWeek)
+                .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
+                .Include(s => s.TimeSlot).ThenInclude(t => t.DaysOfWeek)
                 .FirstOrDefaultAsync(s => s.Id == scheduleId1);
 
             var schedule2 = await _context.Schedules
-                .Include(s => s.Allocation)
-                    .ThenInclude(a => a.Instructor)
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(t => t.DaysOfWeek)
+                .Include(s => s.Allocation).ThenInclude(a => a.Instructor)
+                .Include(s => s.TimeSlot).ThenInclude(t => t.DaysOfWeek)
                 .FirstOrDefaultAsync(s => s.Id == scheduleId2);
 
             if (schedule1 == null || schedule2 == null)
             {
                 return NotFound("One or both schedules not found.");
+            }
+
+            // Verify department match
+            var schedule1DeptId = await _context.Sections
+                .Where(sec => sec.Id == schedule1.Allocation.SectionId)
+                .Select(sec => sec.DepartmentId)
+                .FirstOrDefaultAsync();
+
+            var schedule2DeptId = await _context.Sections
+                .Where(sec => sec.Id == schedule2.Allocation.SectionId)
+                .Select(sec => sec.DepartmentId)
+                .FirstOrDefaultAsync();
+
+            if (schedule1DeptId != currentDepartmentId || schedule2DeptId != currentDepartmentId)
+            {
+                return Forbid("You can only swap schedules within your own department.");
             }
 
             var instructor1Id = schedule1.Allocation.InstructorId;
@@ -602,8 +622,7 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
             var timeSlot2 = schedule2.TimeSlot;
 
             var conflict1 = await _context.Schedules
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(t => t.DaysOfWeek)
+                .Include(s => s.TimeSlot).ThenInclude(t => t.DaysOfWeek)
                 .Include(s => s.Allocation)
                 .Where(s => s.Allocation.InstructorId == instructor1Id && s.Id != schedule1.Id)
                 .FirstOrDefaultAsync(s =>
@@ -612,8 +631,7 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
                     s.TimeSlot.To > timeSlot2.From);
 
             var conflict2 = await _context.Schedules
-                .Include(s => s.TimeSlot)
-                    .ThenInclude(t => t.DaysOfWeek)
+                .Include(s => s.TimeSlot).ThenInclude(t => t.DaysOfWeek)
                 .Include(s => s.Allocation)
                 .Where(s => s.Allocation.InstructorId == instructor2Id && s.Id != schedule2.Id)
                 .FirstOrDefaultAsync(s =>
@@ -623,13 +641,6 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
 
             if (conflict1 != null || conflict2 != null)
             {
-                var schedules = await _context.Schedules
-                    .Include(s => s.Allocation)
-                        .ThenInclude(a => a.Instructor)
-                    .Include(s => s.TimeSlot)
-                        .ThenInclude(t => t.DaysOfWeek)
-                    .ToListAsync();
-
                 var errors = new List<string>();
 
                 if (conflict1 != null)
@@ -643,10 +654,8 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
                 }
 
                 return Json(new { success = false, errors });
-
             }
 
-            
             var tempAllocationId = schedule1.AllocationId;
             schedule1.AllocationId = schedule2.AllocationId;
             schedule2.AllocationId = tempAllocationId;
@@ -655,6 +664,7 @@ public async Task<IActionResult> SwapSchedules(int scheduleId1, int scheduleId2)
 
             return Json(new { success = true });
         }
+
 
         //        [HttpPost]
         //public IActionResult GenerateSectionRoomAssignments()

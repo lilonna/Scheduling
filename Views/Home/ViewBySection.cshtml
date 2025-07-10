@@ -14,10 +14,6 @@
     }
 }
 <div class="container mt-4">
-    @* <h1 class="text-center mb-4">Schedules by Section </h1> *@
-
-
-
 
     @foreach (var batch in Model)
     {
@@ -90,7 +86,9 @@
 
                                             <td class="schedule-cell text-center cursor-pointer transition"
                                                 data-schedule-id="@matchedSchedule?.Id"
-                                                data-section-id="@sectionGroup.Section.Id">
+                                                data-section-id="@sectionGroup.Section.Id"
+                                                data-dept-id="@sectionGroup.Section.DepartmentId">
+
 
                                                 @if (matchedSchedule != null)
                                                 {
@@ -104,21 +102,32 @@
                                                                data-bs-trigger="hover focus"
                                                                data-bs-placement="top"
                                                                title="Instructor"
-                                                               data-bs-content="@matchedSchedule.Allocation.Instructor.FullName">
+                                                               data-bs-content="@(matchedSchedule.Allocation?.Instructor?.FullName ?? "Unknown Instructor")">
                                                                 @matchedSchedule.Allocation.Course.Name
                                                             </a>
 
 
+
                                                         </div>
-                                                        <div class="swap-switch mb-1" style="display:none;">
-                                                            <small class="text-muted text-center d-block mt-1">
-                                                                To swap schedules, turn this on and click the target schedule.
-                                                            </small>
-                                                            <div class="form-check form-switch d-flex justify-content-center">
-                                                                <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
+                                                        @{
+                                                            int? currentDeptId = ViewBag.CurrentUserDepartmentId as int?;
+                                                            int sectionDeptId = sectionGroup.Section.DepartmentId;
+                                                            bool isSectionDeptAdmin = currentDeptId != null && currentDeptId == sectionDeptId;
+                                                        }
+                                                        
+
+                                                        @if (isSectionDeptAdmin)
+                                                        {
+                                                            <div class="swap-switch mb-1" style="display:none;">
+                                                                <small class="text-muted text-center d-block mt-1">
+                                                                    To swap schedules, turn this on and click the target schedule.
+                                                                </small>
+                                                                <div class="form-check form-switch d-flex justify-content-center">
+                                                                    <input class="form-check-input schedule-toggle" type="checkbox" id="swap-@matchedSchedule.Id">
+                                                                </div>
                                                             </div>
-                                                          
-                                                        </div>
+                                                        }
+
                                                     </div>
 
 
@@ -181,16 +190,20 @@
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let firstCell = null;
-        let secondCell = null;
-        let firstSwitchInput = null;
+    function initializePopovers() {
         document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
             new bootstrap.Popover(el);
         });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializePopovers();
+        let firstCell = null;
+        let secondCell = null;
+        let firstSwitchInput = null;
 
         function clearSelection(cell) {
             if (!cell) return;
@@ -209,7 +222,11 @@
             const switchInput = cell.querySelector('.schedule-toggle');
 
             cell.addEventListener('click', function () {
-                if (!firstCell) {
+                const userDeptId = @(ViewBag.CurrentUserDepartmentId != null ? ViewBag.CurrentUserDepartmentId : -1);
+                const cellDeptId = parseInt(cell.dataset.deptId);
+                if (userDeptId !== cellDeptId) return;
+
+                else if (!firstCell) {
                     firstCell = cell;
                     firstSwitchInput = switchInput;
                     cell.classList.add('table-info');
@@ -303,4 +320,4 @@
 
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
