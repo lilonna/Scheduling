@@ -40,7 +40,7 @@ namespace Scheduling.Services
 
                     context.Users.Add(user);
                     await context.SaveChangesAsync();
-                    Console.WriteLine($"✅ User created: {user.UserName} (Id={user.Id})");
+                    Console.WriteLine($" User created: {user.UserName} (Id={user.Id})");
 
                     user.Password = Password._one_way_encrypt("deptadmin123", user.Id);
                     await context.SaveChangesAsync();
@@ -48,7 +48,7 @@ namespace Scheduling.Services
                     var userRole = new UserRole
                     {
                         UserId = user.Id,
-                        RoleId = 2003, // DepartmentAdmin
+                        RoleId = 2003, 
                         IsDefault = true,
                         IsActive = true,
                         IsDeleted = false

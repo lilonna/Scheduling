@@ -36,7 +36,7 @@
                 const batchId = this.dataset.bsTarget.replace('#collapse-', '');
                 const deptList = document.getElementById('dept-list-' + batchId);
                 if (!deptList.dataset.loaded) {
-                    fetch(`/Home/GetDepartmentsByBatch?batchId=${batchId}`)
+                    fetch(`/Scheduling/GetDepartmentsByBatch?batchId=${batchId}`)
                         .then(res => res.json())
                         .then(data => {
                             deptList.innerHTML = "";
@@ -47,7 +47,7 @@
                                     const li = document.createElement('li');
                                     li.className = 'list-group-item';
                                     const link = document.createElement('a');
-                                    link.href = `/Home/ViewSectionByBatch?batchId=${batchId}&departmentId=${dept.id}`;
+                                    link.href = `/Scheduling/ViewSectionByBatch?batchId=${batchId}&departmentId=${dept.id}`;
                                     link.textContent = dept.name;
                                     li.appendChild(link);
                                     deptList.appendChild(li);

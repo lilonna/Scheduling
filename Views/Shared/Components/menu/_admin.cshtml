@@ -1,28 +1,28 @@
 ﻿<ul class="navbar-nav flex-grow-1 d-flex gap-3 ms-5 align-items-center">
     <li class="nav-item">
         <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px;"
-           asp-area="" asp-controller="Home" asp-action="Generate">
-            <i class="fas fa-calendar-alt me-2"></i>Generate
+           asp-area="" asp-controller="Scheduling" asp-action="Generated">
+            <i class="fas fa-calendar-alt me-2"></i>Generated
         </a>
     </li>
 
     <li class="nav-item">
         <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px;"
-           asp-area="" asp-action="ViewAllocations" asp-controller="Home">
+           asp-area="" asp-action="ViewAllocations" asp-controller="Scheduling">
             <i class="fas fa-tasks me-2"></i>Manage Allocations
         </a>
     </li>
 
     <li class="nav-item d-flex align-items-center">
-        <form asp-action="GenerateSectionRoomAssignments" method="post" class="m-0">
+        <form asp-action="ViewSectionRoomAssignments" method="get" class="m-0">
             <button type="submit" class="btn btn-link nav-link text-white fw-bold d-flex align-items-center p-0" style="font-size: 18px;">
-                <i class="fas fa-door-open me-2"></i>Assign Rooms
+                <i class="fas fa-door-open me-2"></i>View Rooms
             </button>
         </form>
     </li>
     <li class="nav-item d-flex align-items-center">
        <a class="nav-link text-white fw-bold d-flex align-items-center" style="font-size: 18px; transition: 0.3s;"
-             asp-area="" asp-action="SelectBatch" asp-controller="Home">
+           asp-area="" asp-action="SelectBatch" asp-controller="Scheduling">
              <i class="fas fa-list me-2"></i>View Sections
         </a>
     </li>

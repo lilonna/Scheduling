@@ -101,8 +101,8 @@
                                                                data-bs-toggle="popover"
                                                                data-bs-trigger="hover focus"
                                                                data-bs-placement="top"
-                                                               title="Instructor"
-                                                               data-bs-content="@(matchedSchedule.Allocation?.Instructor?.FullName ?? "Unknown Instructor")">
+                                                               title="Instructor & Room"
+                                                               data-bs-content="@(matchedSchedule.Allocation?.Instructor?.FullName ?? "Unknown Instructor")|@(matchedSchedule.Room?.RoomNumber ?? matchedSchedule.Allocation?.Section?.Room?.RoomNumber ?? "unassigned Room")">
                                                                 @matchedSchedule.Allocation.Course.Name
                                                             </a>
 

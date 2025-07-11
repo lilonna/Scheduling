@@ -2,7 +2,7 @@
 
 <h2>Search Allocations</h2>
 
-<form method="get" asp-action="ViewAllocations" class="mb-3">
+<form method="get" asp-controller="Scheduling"  asp-action="ViewAllocations" class="mb-3">
     <div class="input-group">
         <input type="text" name="searchInstructor" class="form-control" placeholder="Enter instructor name"
                value="@ViewBag.SearchInstructor" />
