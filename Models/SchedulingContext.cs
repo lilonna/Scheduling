@@ -17,6 +17,10 @@ public partial class SchedulingContext : DbContext
 
     public virtual DbSet<AdmissionType> AdmissionTypes { get; set; }
 
+    public virtual DbSet<AdmissionTypeCategory> AdmissionTypeCategories { get; set; }
+
+    public virtual DbSet<AdmissionTypeDay> AdmissionTypeDays { get; set; }
+
     public virtual DbSet<Allocation> Allocations { get; set; }
 
     public virtual DbSet<Batch> Batchs { get; set; }
@@ -69,6 +73,32 @@ public partial class SchedulingContext : DbContext
         modelBuilder.Entity<AdmissionType>(entity =>
         {
             entity.Property(e => e.Id).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<AdmissionTypeCategory>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.AdmissionType).WithMany(p => p.AdmissionTypeCategories)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AdmissionTypeCategories_AdmissionTypes");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.AdmissionTypeCategories)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AdmissionTypeCategories_Categories");
+        });
+
+        modelBuilder.Entity<AdmissionTypeDay>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
+
+            entity.HasOne(d => d.AdmissionType).WithMany(p => p.AdmissionTypeDays)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AdmissionTypeDays_AdmissionTypes");
+
+            entity.HasOne(d => d.DayOfWeek).WithMany(p => p.AdmissionTypeDays)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AdmissionTypeDays_DaysOfWeek");
         });
 
         modelBuilder.Entity<Allocation>(entity =>
